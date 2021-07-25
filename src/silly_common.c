@@ -1,15 +1,23 @@
 #include "silly_common.h"
 #include <malloc.h>
+#include <string.h>
 
-int silly_stack_init(SillyStack *stack, size_t count)
+int silly_stack_init(SillyStack *stack, size_t slot_count,
+						size_t register_count, void *symbol)
 {
-	stack->size = count * sizeof(SillyStackSlot);
-	stack->count = count;
-	stack->register_count = 0;
-	stack->data = (SillyStackSlot *)calloc(count, sizeof(SillyStackSlot));
+	stack->size			  = slot_count * sizeof(SillyStackSlot);
+	stack->slot_count	  = slot_count;
+	stack->count		  = 0;
+	stack->register_count = register_count;
+	stack->data			  = (SillyStackSlot *)malloc(stack->size);
+
 	if (stack->data == NULL)
 		return SILLY_S_NO_MEMORY;
-	stack->stack_top = stack->data;
+
+	stack->data_start	  = stack->data + register_count;
+	stack->stack_top	  = stack->data_start;
+	stack->symbol		  = symbol;
+
 	return SILLY_S_OK;
 }
 int silly_stack_push(SillyStack *stack, SillyStackSlot *value)
@@ -27,7 +35,7 @@ int silly_stack_push(SillyStack *stack, SillyStackSlot *value)
 		}
 	}
 	memcpy(stack->stack_top, value, sizeof(SillyStackSlot));
-	stack->stack_top = &stack->stack_top[1];
+	stack->stack_top++;
 	stack->count++;
 	return SILLY_S_OK;
 }
@@ -45,6 +53,22 @@ int silly_stack_pop(SillyStack *stack, int type,
 		stack->count--;
 		return SILLY_S_OK;
 	}
+}
+int silly_stack_drop(SillyStack *stack)
+{
+	if (stack->count == 0)
+		return SILLY_S_STACK_EMPTY;
+	memset(&stack->stack_top[-1], 0, sizeof(SillyStackSlot));
+	stack->stack_top--;
+	return SILLY_S_OK;
+}
+SillyStack silly_stack_split(SillyStack *stack, size_t register_count,
+		void *symbol)
+{
+	SillyStack new_stack;
+	new_stack.register_count = register_count;
+	new_stack.symbol = symbol;
+	return new_stack;
 }
 void silly_stack_clean(SillyStack *stack)
 {

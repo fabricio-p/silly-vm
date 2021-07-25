@@ -1,6 +1,8 @@
 #ifndef SILLY_COMMON_H
 #define SILLY_COMMON_H
 #include <stdint.h>
+#define __silly_inline__						\
+	__attribute__((always_inline)) static inline
 
 enum silly_status {
 	SILLY_S_OK,
@@ -41,18 +43,33 @@ typedef struct _SillyStackSlot {
 } SillyStackSlot;
 
 typedef struct _SillyStack {
-	size_t		   size;
-	size_t		   count;
-	size_t		   register_count;
-	SillyStackSlot *data;
-	SillyStackSlot *stack_top;
+	size_t			   size;
+	size_t			   count;
+	size_t			   slot_count;
+	size_t			   register_count;
+	struct {
+		char		   *name;
+		size_t		   name_length;
+	}				   *symbol;
+	struct _SillyStack *parent;
+	struct _SillyStack *next;
+	SillyStackSlot	   *data;
+	SillyStackSlot	   *data_start;
+	SillyStackSlot	   *stack_top;
 } SillyStack;
 
-int			   silly_stack_init	   (SillyStack *, size_t);
-int			   silly_stack_push	   (SillyStack *, SillyStackSlot *);
-int			   silly_stack_pop	   (SillyStack *, int, SillyStackSlot *);
-// SillyStack	   silly_stack_split_at(SillyStack *, size_t);
-void		   silly_stack_clean   (SillyStack *);
+int			   silly_stack_init	(SillyStack *, size_t, size_t, void *);
+int			   silly_stack_push	(SillyStack *, SillyStackSlot *);
+int			   silly_stack_pop	(SillyStack *, int, SillyStackSlot *);
+__silly_inline__
+void		   silly_stack_clear(SillyStack *stack)
+{
+	stack->stack_top = stack->data_start;
+	stack->count = 0;
+}
+int			   silly_stack_drop	(SillyStack *);
+SillyStack	   silly_stack_split(SillyStack *, size_t, void *);
+void		   silly_stack_clean(SillyStack *);
 
 #define SILLY_MEMORY_PAGE_SIZE 0x10000
 #define SILLY_MEMORY_MAX_PAGE_COUNT 0x20
@@ -65,8 +82,8 @@ typedef struct _SillyMemory {
 	void	*data;
 } SillyMemory;
 
-__attribute__((always_inline))
-static inline int silly_memory_size_from_pages(int page_count)
+__silly_inline__
+int silly_memory_size_from_pages(int page_count)
 {
 	return SILLY_MEMORY_PAGE_SIZE * page_count;
 }
@@ -75,5 +92,18 @@ int  silly_memory_init (SillyMemory *, uint8_t);
 int  silly_memory_write(SillyMemory *, size_t, void *, size_t);
 int	 silly_memory_read (SillyMemory *, size_t, void *, size_t);
 void silly_memory_clean(SillyMemory *);
+
+typedef struct _SillyType {
+	uint16_t param_count;
+	uint16_t result_count;
+	uint8_t	 types[1];
+} SillyType;
+
+typedef struct _SillyFunc {
+	void      **ip;
+	void	  **body;
+	SillyType *type;
+	size_t	  size;
+} SillyFunc;
 
 #endif /* SILLY_COMMON_H */
