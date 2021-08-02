@@ -26,21 +26,45 @@ typedef enum silly_type {
 	SILLY_T_EXTERNREF*/
 } silly_type_e;
 
+typedef struct _SillyType {
+	uint16_t param_count;
+	uint16_t local_count;
+	uint16_t result_count;
+	uint8_t	 types[1];
+} SillyType;
+
+typedef struct _SillyFunc {
+	void      **ip;
+	void	  **body;
+	SillyType *type;
+	size_t	  size;
+} SillyFunc;
+
 #define SILLY_MAX_STACK_COUNT 0x100 // 256 stack slots
 #define SILLY_MAX_STACK_SIZE							\
 	(SILLY_MAX_STACK_COUNT * sizeof(SillyStackSlot))
 
+typedef union _SillyStackValue {
+	uint32_t i32_u;
+	int32_t	 i32_s;
+	uint64_t i64_u;
+	int64_t	 i64_s;
+	float	 f32;
+	double	 f64;
+} SillyStackValue;
+
 typedef struct _SillyStackSlot {
-	uint8_t		 type;
-	union {
-		uint32_t i32_u;
-		int32_t	 i32_s;
-		uint64_t i64_u;
-		int64_t	 i64_s;
-		float	 f32;
-		double	 f64;
-	}			 value;
+	uint8_t			type;
+	SillyStackValue	value;
 } SillyStackSlot;
+
+__silly_inline__
+void silly_stackslot_init(SillyStackSlot *slot, uint8_t type,
+							SillyStackValue value)
+{
+	slot->type = type;
+	slot->value = value;
+}
 
 typedef struct _SillyStack {
 	size_t			   size;
@@ -48,8 +72,8 @@ typedef struct _SillyStack {
 	size_t			   slot_count;
 	size_t			   register_count;
 	struct {
-		char		   *name;
-		size_t		   name_length;
+		char   *name;
+		size_t name_length;
 	}				   *symbol;
 	struct _SillyStack *parent;
 	struct _SillyStack *next;
@@ -68,7 +92,14 @@ void		   silly_stack_clear(SillyStack *stack)
 	stack->count = 0;
 }
 int			   silly_stack_drop	(SillyStack *);
-SillyStack	   silly_stack_split(SillyStack *, size_t, void *);
+SillyStack	   silly_stack_split(SillyStack *, SillyType *, void *);
+__silly_inline__
+void		   silly_stack_link	(SillyStack *stack, SillyStack *other)
+{
+	stack->next = other;
+	other->parent = stack;
+}
+void		   silly_stack_dump	(SillyStack *);
 void		   silly_stack_clean(SillyStack *);
 
 #define SILLY_MEMORY_PAGE_SIZE 0x10000
@@ -93,17 +124,5 @@ int  silly_memory_write(SillyMemory *, size_t, void *, size_t);
 int	 silly_memory_read (SillyMemory *, size_t, void *, size_t);
 void silly_memory_clean(SillyMemory *);
 
-typedef struct _SillyType {
-	uint16_t param_count;
-	uint16_t result_count;
-	uint8_t	 types[1];
-} SillyType;
-
-typedef struct _SillyFunc {
-	void      **ip;
-	void	  **body;
-	SillyType *type;
-	size_t	  size;
-} SillyFunc;
 
 #endif /* SILLY_COMMON_H */
