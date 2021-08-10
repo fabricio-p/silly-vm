@@ -1,4 +1,5 @@
 #include "silly_common.h"
+#include "endian.h"
 #include <malloc.h>
 #include <string.h>
 
@@ -112,7 +113,7 @@ int silly_memory_init(SillyMemory *memory, uint8_t page_count)
 		memory->data = malloc(memory->size);
 		if (memory->data == NULL)
 			return SILLY_S_NO_MEMORY;
-		
+		memset(memory->data, 0, memory->size);
 	}
 	else
 		memory->data = NULL;
@@ -143,6 +144,100 @@ int silly_memory_read(SillyMemory *memory, size_t offset, void *dest,
 	memcpy(dest, memory->data + offset, size);
 	return SILLY_S_OK;
 }
+int silly_memory_store(SillyMemory *memory, size_t offset,
+						silly_memory_type type, SillyStackValue value)
+{
+	if (offset + silly_memory_sizeof(type) >= memory->size)
+		return SILLY_S_MEMORY_ACCESS_OUT_OF_BOUNDS;
+	uint8_t *ptr = memory->data + offset;
+	switch (type)
+	{
+		case SILLY_MT_I8_S:
+			write_i8_s(ptr, (int8_t)value.i32_s);
+			break;
+		case SILLY_MT_I8_U:
+			write_i8_u(ptr, (uint8_t)value.i32_u);
+			break;
+		case SILLY_MT_I16_S:
+			write_i16_s(ptr, (int16_t)value.i32_s);
+			break;
+		case SILLY_MT_I16_U:
+			write_i16_u(ptr, (uint16_t)value.i32_u);
+			break;
+		case SILLY_MT_I32_S:
+			write_i32_s(ptr, (int32_t)value.i32_s);
+		case SILLY_MT_I32_U:
+			write_i32_u(ptr, (uint32_t)value.i32_u);
+			break;
+		case SILLY_MT_F32:
+			write_f32(ptr, (float)value.f32);
+			break;
+		case SILLY_MT_I64_S:
+			write_i64_s(ptr, (int64_t)value.i64_s);
+			break;
+		case SILLY_MT_I64_U:
+			write_i64_u(ptr, (uint64_t)value.i64_u);
+			break;
+		case SILLY_MT_F64:
+			write_f64(ptr, (double)value.f64);
+			break;
+		default:
+			return SILLY_S_UNKNOWN_NUMBER_TYPE;
+	}
+	return SILLY_S_OK;
+}
+int silly_memory_load(SillyMemory *memory, size_t offset,
+						silly_memory_type type, SillyStackSlot *slot)
+{
+	if (offset + silly_memory_sizeof(type) >= memory->size)
+		return SILLY_S_MEMORY_ACCESS_OUT_OF_BOUNDS;
+	void *ptr = memory->data + offset;
+	switch (type)
+	{
+		case SILLY_MT_I8_S:
+			slot->type = SILLY_T_I32_S;
+			slot->value.i32_s = read_i8_s(ptr);
+			break;
+		case SILLY_MT_I8_U:
+			slot->type = SILLY_T_I32_U;
+			slot->value.i32_u = read_i8_u(ptr);
+			break;
+		case SILLY_MT_I16_S:
+			slot->type = SILLY_T_I32_S;
+			slot->value.i32_s = read_i16_s(ptr);
+			break;
+		case SILLY_MT_I16_U:
+			slot->type = SILLY_T_I32_U;
+			slot->value.i32_u = read_i16_u(ptr);
+			break;
+		case SILLY_MT_I32_S:
+			slot->type = SILLY_T_I32_S;
+			slot->value.i32_s = read_i32_s(ptr);
+		case SILLY_MT_I32_U:
+			slot->type = SILLY_T_I32_U;
+			slot->value.i32_u = read_i32_u(ptr);
+			break;
+		case SILLY_MT_F32:
+			slot->type = SILLY_T_F32;
+			slot->value.f32 = read_f32(ptr);
+			break;
+		case SILLY_MT_I64_S:
+			slot->type = SILLY_T_I64_S;
+			slot->value.i64_s = read_i64_s(ptr);
+			break;
+		case SILLY_MT_I64_U:
+			slot->type = SILLY_T_I64_U;
+			slot->value.i32_u = read_i64_u(ptr);
+			break;
+		case SILLY_MT_F64:
+			slot->type = SILLY_T_F64;
+			slot->value.f64 = read_f64(ptr);
+			break;
+		default:
+			return SILLY_S_UNKNOWN_NUMBER_TYPE;
+	}
+	return SILLY_S_OK;
+}
 void silly_memory_clean(SillyMemory *memory)
 {
 	if (memory != NULL)
@@ -152,5 +247,20 @@ void silly_memory_clean(SillyMemory *memory)
 		memory->data = NULL;
 		memory->page_count = 0;
 		memory->size = 0;
+	}
+}
+int silly_memory_sizeof(silly_memory_type type)
+{
+	switch (type)
+	{
+		case SILLY_MT_I8_U:	
+		case SILLY_MT_I8_S:  return 1; break;
+		case SILLY_MT_I16_U:
+		case SILLY_MT_I16_S: return 2; break;
+		case SILLY_MT_I32_U:
+		case SILLY_MT_I32_S: case SILLY_MT_F32: return 4; break;
+		case SILLY_MT_I64_U:
+		case SILLY_MT_I64_S: case SILLY_MT_F64: return 8; break;
+		default: return -1; break;
 	}
 }
