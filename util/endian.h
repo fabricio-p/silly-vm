@@ -1,6 +1,6 @@
 #ifndef SILLY_UTIL_ENDIAN_H
 #define SILLY_UTIL_ENDIAN_H
-#include <silly_common.h>
+#include "silly_common.h"
 
 __silly_inline__
 void write_i8_u(void *ptr, uint8_t value)
@@ -21,6 +21,26 @@ __silly_inline__
 int8_t read_i8_s(void *ptr)
 {
 	return *(int8_t *)ptr;
+}
+__silly_inline__
+void write_f32(void *ptr, float value)
+{
+	*((float *)ptr) = value;
+}
+__silly_inline__
+void write_f64(void *ptr, double value)
+{
+	*((double *)ptr) = value;
+}
+__silly_inline__
+float read_f32(void *ptr)
+{
+	return *((float *)ptr);
+}
+__silly_inline__
+double read_f64(void *ptr)
+{
+	return *((double *)ptr);
 }
 #ifndef __LITTLE_ENDIAN__
 __silly_inline__
@@ -55,16 +75,6 @@ __silly_inline__
 void write_i64_s(void *ptr, int64_t value)
 {
 	write_i64_u(ptr, (uint64_t)value);
-}
-__silly_inline__
-void write_f32(void *ptr, float value)
-{
-	write_i32_u(ptr, *((uint32_t *)&value));
-}
-__silly_inline__
-void write_f64(void *ptr, double value)
-{
-	write_i64_u(ptr, *((uint64_t *)&value));
 }
 __silly_inline__
 uint16_t read_i16_u(void *ptr)
@@ -105,18 +115,6 @@ int64_t read_i64_s(void *ptr)
 {
 	return (int64_t)read_i64_u(ptr);
 }
-__silly_inline__
-float read_f32(void *ptr)
-{
-	uint32_t value = read_i32_u(ptr);
-	return *(float *)&value;
-}
-__silly_inline__
-double read_f64(void *ptr)
-{
-	uint64_t value = read_i64_u(ptr);
-	return *(double *)&value;
-}
 #else
 __silly_inline__
 void write_i16_u(void *ptr, uint16_t value)
@@ -148,16 +146,6 @@ void write_i64_s(void *ptr, int64_t value)
 {
 	*(uint64_t *)ptr = value;
 }
-__silly_inline__
-void write_f32(void *ptr, float value)
-{
-	*(float *)ptr = value;
-}
-__silly_inline__
-void write_f64(void *ptr, double value)
-{
-	*(double *)ptr = value;
-}
 
 __silly_inline__
 uint16_t read_i16_u(void *ptr)
@@ -188,16 +176,6 @@ __silly_inline__
 int64_t read_i64_s(void *ptr)
 {
 	return *(int64_t *)ptr;
-}
-__silly_inline__
-float read_f32(void *ptr)
-{
-	return *(float *)ptr;
-}
-__silly_inline__
-double read_f64(void *ptr)
-{
-	return *(double *)ptr;
 }
 #endif /* __LITTLE_ENDIAN__ */
 #endif /* SILLY_UTIL_ENDIAN_H */

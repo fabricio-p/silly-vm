@@ -1,3 +1,7 @@
 *.o
 /silly
 /tmp
+*.swp
+*.swo
+CUnitAutomated-Results.xml
+/*_test

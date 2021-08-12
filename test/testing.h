@@ -12,7 +12,7 @@
 		goto test_runer;													\
 	}																		\
 	printf("(A)utomated (C)onsole (B)asic\n");								\
-	printf("Enter test runing method (default Basic):");					\
+	printf("Enter test runing method (default Basic): ");					\
 	option = getc(stdin);													\
 	option = option == '\n' ? 'B': option;									\
 	test_runer:																\

@@ -67,7 +67,7 @@ int silly_stack_drop(SillyStack *stack)
 }
 // XXX: Call silly_stack_link with the parent and next stack.
 SillyStack silly_stack_split(SillyStack *stack, SillyType *type,
-		void *symbol)
+		void *symbol, size_t local_count)
 {
 	SillyStack new_stack;
 	new_stack.count			 = 0;
@@ -75,12 +75,15 @@ SillyStack silly_stack_split(SillyStack *stack, SillyType *type,
 								stack->register_count - stack->count +
 								type->param_count;
 	new_stack.size			 = new_stack.slot_count * sizeof(SillyStackSlot);
-	new_stack.register_count = type->param_count + type->local_count;
+	new_stack.register_count = type->param_count + local_count;
 	new_stack.symbol		 = symbol;
 	new_stack.data			 = stack->stack_top - type->param_count;
-	new_stack.data_start	 = stack->stack_top + type->local_count;
+	new_stack.data_start	 = stack->stack_top + local_count;
 	new_stack.stack_top		 = new_stack.data_start;
 	new_stack.next			 = NULL;
+	stack->data_start		-= type->param_count;
+	stack->stack_top		-= type->param_count;
+	stack->count			-= type->param_count;
 	return new_stack;
 }
 void silly_stack_dump(SillyStack *stack)
@@ -149,7 +152,8 @@ int silly_memory_store(SillyMemory *memory, size_t offset,
 {
 	if (offset + silly_memory_sizeof(type) >= memory->size)
 		return SILLY_S_MEMORY_ACCESS_OUT_OF_BOUNDS;
-	uint8_t *ptr = memory->data + offset;
+	void *ptr = memory->data + offset;
+	printf("memory.store<%p>[%d](%u, %p)\n", memory->data, type, offset, ptr);
 	switch (type)
 	{
 		case SILLY_MT_I8_S:
@@ -170,7 +174,8 @@ int silly_memory_store(SillyMemory *memory, size_t offset,
 			write_i32_u(ptr, (uint32_t)value.i32_u);
 			break;
 		case SILLY_MT_F32:
-			write_f32(ptr, (float)value.f32);
+			// write_f32(ptr, (float)value.f32);
+			*(float *)ptr = 35.12;
 			break;
 		case SILLY_MT_I64_S:
 			write_i64_s(ptr, (int64_t)value.i64_s);
@@ -179,7 +184,8 @@ int silly_memory_store(SillyMemory *memory, size_t offset,
 			write_i64_u(ptr, (uint64_t)value.i64_u);
 			break;
 		case SILLY_MT_F64:
-			write_f64(ptr, (double)value.f64);
+			// write_f64(ptr, (double)value.f64);
+			*(double *)ptr = value.f64;
 			break;
 		default:
 			return SILLY_S_UNKNOWN_NUMBER_TYPE;
@@ -192,6 +198,7 @@ int silly_memory_load(SillyMemory *memory, size_t offset,
 	if (offset + silly_memory_sizeof(type) >= memory->size)
 		return SILLY_S_MEMORY_ACCESS_OUT_OF_BOUNDS;
 	void *ptr = memory->data + offset;
+	printf("memory.load[%d](%u)\n", type, offset);
 	switch (type)
 	{
 		case SILLY_MT_I8_S:

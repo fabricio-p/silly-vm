@@ -86,7 +86,7 @@ void silly_stackslot_init(SillyStackSlot *slot, uint8_t type,
 }
 
 typedef struct _SillyStack {
-	size_t.            size;
+	size_t             size;
 	size_t             count;
 	size_t             slot_count;
 	size_t             register_count;
@@ -111,7 +111,7 @@ void		   silly_stack_clear(SillyStack *stack)
 	stack->count = 0;
 }
 int			   silly_stack_drop	(SillyStack *);
-SillyStack	   silly_stack_split(SillyStack *, SillyType *, void *);
+SillyStack	   silly_stack_split(SillyStack *, SillyType *, void *, size_t);
 __silly_inline__
 void		   silly_stack_link	(SillyStack *stack, SillyStack *other)
 {
