@@ -53,6 +53,8 @@ typedef struct SFunc {
   } stack_usage; */
   // void  (*native)(SCallFrame *);
 } SFunc;
+typedef SFunc **SFuncTable;
+
 // A stack value
 typedef struct SValue {
   union {
@@ -113,7 +115,7 @@ typedef struct SModule {
   CStr        path;
   SModuleInfo *raw;
   SType       **types;
-  SFunc       **function_table;
+  SFuncTable  function_table;
 } SModule;
 
 struct SEnv {
