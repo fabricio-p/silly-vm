@@ -1,0 +1,66 @@
+# The instruction set of the bytecode
+halt.vm
+nop
+# Stack manipulation
+duplicate.any
+drop.any
+# Constants
+const.u32
+const.s32
+const.u64
+const.s64
+const.f32
+const.f64
+const.usize
+# Virtual registers
+set.local
+set.global
+get.local
+get.global
+# Operations on 32 bit unsigned integers
+add.u32
+sub.u32
+mul.u32
+div.u32
+mod.u32
+lshift.u32
+rshift.u32
+# Operations on 32 bit signed integers
+add.s32
+sub.s32
+mul.s32
+div.s32
+mod.s32
+lshift.s32
+rshift.s32
+# Operations on 64 bit unsigned integers
+add.u64
+sub.u64
+mul.u64
+div.u64
+mod.u64
+lshift.u64
+rshift.u64
+# Operations on 64 bit signed integers
+add.s64
+sub.s64
+mul.s64
+div.s64
+mod.s64
+lshift.s64
+rshift.s64
+# Operations on 32 bit floating points
+add.f32
+sub.f32
+mul.f32
+div.f32
+floor.f32
+ceil.f32
+# Operations on 64 bit floating points
+add.f64
+sub.f64
+mul.f64
+div.f64
+floor.f64
+ceil.f64
+sqrt.f64

@@ -1,0 +1,7 @@
+/build
+/bin
+/tmp
+*.swp
+*.swo
+CUnitAutomated-Results.xml
+/cake_libs
