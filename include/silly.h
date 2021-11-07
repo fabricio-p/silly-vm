@@ -3,15 +3,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-// Defines
-// Stack types
-#define STYPE_U32 4
-#define STYPE_S32 8
-#define STYPE_U64 12
-#define STYPE_S64 16
-#define STYPE_F32 20
-#define STYPE_F64 24
-
 // Typedefs of basic primitive types and structs
 typedef uint8_t    U8;
 typedef int8_t     S8;
@@ -29,6 +20,9 @@ typedef char       *Str;
 typedef char const *CStr;
 typedef void       *voidptr;
 typedef U8         SValueKind;
+typedef Ssize      SStatus;
+
+#define SILLY_S_OK 0
 
 typedef struct PStr {
   U32 len;
@@ -43,10 +37,10 @@ typedef struct SType {
 } SType;
 
 typedef struct SFunc {
-  SType *type;
-  U8    *code;
-  U8    *code_end;
-  PStr  *name;
+  SType const *type;
+  U8    const *code;
+  U8    const *code_end;
+  PStr  const *name;
   /* struct {
     Usize max : 15;
     Usize is_reported : 1;
@@ -74,10 +68,11 @@ typedef struct SCallFrame  SCallFrame;
 typedef struct SEnv        SEnv;
 
 typedef struct SStack {
-  SValue *data;
-  U32    size;
-  U32    max_size;
-  SCallFrame   *root_frame;
+  SValue     *data;
+  U32        size;
+  U32        max_size;
+  SCallFrame *frames;
+  U32        call_depth;
 } SStack;
 
 typedef struct SMemory {
@@ -97,14 +92,11 @@ struct SCallFrame {
   // (s)tack (t)op, the pointer at the slot right after the last used one
   SValue      *st;
   // the pointer to the function that called
-  SFunc       *symbol;
-  // the parent stack frame that contains this one, if it is NULL it means
-  // that this is the root frame
-  SStackFrame *parent;
-  // the child frame that is nested inside this one
-  SStackFrame *child;
-  // the execution environment
-  SEnv        *env;
+  SFunc       *function;
+  SStack      *stack;
+  U32         frame_index;
+  // will tell at which opcode failure occurred if it occurs
+  U8 const    *ip;
   // the size of the stack in SValues it can fit
   U32         size;
 };
@@ -122,7 +114,7 @@ struct SEnv {
   SStack  stack;
   SMemory memory;
   SModule *modules;
-  SFunc   *all_functions;;
+  SFunc   *all_functions;
 };
 
 #endif /* SILLY_H */
