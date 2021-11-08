@@ -40,47 +40,51 @@
 #define SILLY_INSTR_MOD_U32       19
 #define SILLY_INSTR_LSHIFT_U32    20
 #define SILLY_INSTR_RSHIFT_U32    21
+#define SILLY_INSTR_REM_U32       22
 // Operations on 32 bit signed integers
-#define SILLY_INSTR_ADD_S32       22
-#define SILLY_INSTR_SUB_S32       23
-#define SILLY_INSTR_MUL_S32       24
-#define SILLY_INSTR_DIV_S32       25
-#define SILLY_INSTR_MOD_S32       26
-#define SILLY_INSTR_LSHIFT_S32    27
-#define SILLY_INSTR_RSHIFT_S32    28
+#define SILLY_INSTR_ADD_S32       23
+#define SILLY_INSTR_SUB_S32       24
+#define SILLY_INSTR_MUL_S32       25
+#define SILLY_INSTR_DIV_S32       26
+#define SILLY_INSTR_MOD_S32       27
+#define SILLY_INSTR_LSHIFT_S32    28
+#define SILLY_INSTR_RSHIFT_S32    29
+#define SILLY_INSTR_REM_S32       30
 // Operations on 64 bit unsigned integers
-#define SILLY_INSTR_ADD_U64       29
-#define SILLY_INSTR_SUB_U64       30
-#define SILLY_INSTR_MUL_U64       31
-#define SILLY_INSTR_DIV_U64       32
-#define SILLY_INSTR_MOD_U64       33
-#define SILLY_INSTR_LSHIFT_U64    34
-#define SILLY_INSTR_RSHIFT_U64    35
+#define SILLY_INSTR_ADD_U64       31
+#define SILLY_INSTR_SUB_U64       32
+#define SILLY_INSTR_MUL_U64       33
+#define SILLY_INSTR_DIV_U64       34
+#define SILLY_INSTR_MOD_U64       35
+#define SILLY_INSTR_LSHIFT_U64    36
+#define SILLY_INSTR_RSHIFT_U64    37
+#define SILLY_INSTR_REM_U64       38
 // Operations on 64 bit signed integers
-#define SILLY_INSTR_ADD_S64       36
-#define SILLY_INSTR_SUB_S64       37
-#define SILLY_INSTR_MUL_S64       38
-#define SILLY_INSTR_DIV_S64       39
-#define SILLY_INSTR_MOD_S64       40
-#define SILLY_INSTR_LSHIFT_S64    41
-#define SILLY_INSTR_RSHIFT_S64    42
+#define SILLY_INSTR_ADD_S64       39
+#define SILLY_INSTR_SUB_S64       40
+#define SILLY_INSTR_MUL_S64       41
+#define SILLY_INSTR_DIV_S64       42
+#define SILLY_INSTR_MOD_S64       43
+#define SILLY_INSTR_LSHIFT_S64    44
+#define SILLY_INSTR_RSHIFT_S64    45
+#define SILLY_INSTR_REM_S64       46
 // Operations on 32 bit floating points
-#define SILLY_INSTR_ADD_F32       43
-#define SILLY_INSTR_SUB_F32       44
-#define SILLY_INSTR_MUL_F32       45
-#define SILLY_INSTR_DIV_F32       46
-#define SILLY_INSTR_FLOOR_F32     47
-#define SILLY_INSTR_CEIL_F32      48
+#define SILLY_INSTR_ADD_F32       47
+#define SILLY_INSTR_SUB_F32       48
+#define SILLY_INSTR_MUL_F32       49
+#define SILLY_INSTR_DIV_F32       50
+#define SILLY_INSTR_FLOOR_F32     51
+#define SILLY_INSTR_CEIL_F32      52
 // Operations on 64 bit floating points
-#define SILLY_INSTR_ADD_F64       49
-#define SILLY_INSTR_SUB_F64       50
-#define SILLY_INSTR_MUL_F64       51
-#define SILLY_INSTR_DIV_F64       52
-#define SILLY_INSTR_FLOOR_F64     53
-#define SILLY_INSTR_CEIL_F64      54
-#define SILLY_INSTR_SQRT_F64      55
+#define SILLY_INSTR_ADD_F64       53
+#define SILLY_INSTR_SUB_F64       54
+#define SILLY_INSTR_MUL_F64       55
+#define SILLY_INSTR_DIV_F64       56
+#define SILLY_INSTR_FLOOR_F64     57
+#define SILLY_INSTR_CEIL_F64      58
+#define SILLY_INSTR_SQRT_F64      59
 
-#define COUNT_SILLY_INSTR         56
+#define COUNT_SILLY_INSTR         60
 
 #ifdef ENV_DEV
 typedef struct InstrInfo {
