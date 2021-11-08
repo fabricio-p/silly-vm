@@ -4,7 +4,7 @@ UTIL       := $(wildcard util/*.c)
 UTIL_OBJS  := $(UTIL:util/%.c=build/%.o)
 EXEC       := silly
 CFLAGS     := -std=c99 -Wall -Wextra -I include -I cake_libs/ -O0 -g \
-              -Wno-unused-function -Wno-unused-parameter
+              -Wno-unused-function -Wno-unused-parameter -Werror
 CC	       ?= clang
 TESTS      := $(wildcard test/*.c)
 TESTS_OBJS := $(TESTS:test/%_test.c=build/%_test.o)
