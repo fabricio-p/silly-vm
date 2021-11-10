@@ -25,6 +25,7 @@ div.u32
 mod.u32
 lshift.u32
 rshift.u32
+rem.u32
 # Operations on 32 bit signed integers
 add.s32
 sub.s32
@@ -33,6 +34,7 @@ div.s32
 mod.s32
 lshift.s32
 rshift.s32
+rem.s32
 # Operations on 64 bit unsigned integers
 add.u64
 sub.u64
@@ -41,6 +43,7 @@ div.u64
 mod.u64
 lshift.u64
 rshift.u64
+rem.u64
 # Operations on 64 bit signed integers
 add.s64
 sub.s64
@@ -49,6 +52,7 @@ div.s64
 mod.s64
 lshift.s64
 rshift.s64
+rem.s64
 # Operations on 32 bit floating points
 add.f32
 sub.f32
