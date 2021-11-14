@@ -14,8 +14,8 @@
 
 /* Regular instructions  */
 // The instruction set of the bytecode
-#define SILLY_INSTR_HALT_VM       0
-#define SILLY_INSTR_NOP           1
+#define SILLY_INSTR_NOP           0
+#define SILLY_INSTR_HALT_VM       1
 // Stack manipulation
 #define SILLY_INSTR_DUPLICATE_ANY 2
 #define SILLY_INSTR_DROP_ANY      3
@@ -84,7 +84,7 @@
 #define SILLY_INSTR_CEIL_F64      58
 #define SILLY_INSTR_SQRT_F64      59
 
-#define COUNT_SILLY_INSTR         60
+#define COUNT_SILLY_INSTR         63
 
 #ifdef ENV_DEV
 typedef struct InstrInfo {

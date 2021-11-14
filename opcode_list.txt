@@ -1,6 +1,6 @@
 # The instruction set of the bytecode
-halt.vm
 nop
+halt.vm
 # Stack manipulation
 duplicate.any
 drop.any
