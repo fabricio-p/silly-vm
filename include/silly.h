@@ -23,7 +23,12 @@ typedef void       *voidptr;
 typedef U8         SValueKind;
 typedef Ssize      SStatus;
 
-#define SILLY_S_OK 0
+#define SILLY_S_OK    0
+#define SILLY_S_HALT  1
+#define SILLY_S_OOM   2 // (O)ut (O)f (M)emory
+#define SILLY_S_SO    3 // (S)tack (O)verflow
+#define SILLY_S_CDE   4 // (C)all (D)epth (E)xceeded
+#define SILLY_S_CRASH 5
 
 typedef struct PStr {
   U32 len;
