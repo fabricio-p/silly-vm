@@ -31,12 +31,12 @@ HANDLE_INSTR(opname##_##type) {                         \
   cache.field = st[-1].field = (action);                \
 }
 
-#define HALT_S_CREATE(exit_code)                      \
-  (((exit_code) << (sizeof(U8) * 3)) | SILLY_S_HALT)
+#define HALT_E_CREATE(exit_code)                      \
+  (((exit_code) << (sizeof(U8) * 3)) | SILLY_E_HALT)
 
 SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
 {
-  SStatus status = SILLY_S_OK;
+  SStatus status = SILLY_E_OK;
   U8 const *ip = frame->function->code;
   U8 const *const end = frame->function->code_end;
   SValue cache = { .kind = 0, .u64 = 0 };
@@ -59,7 +59,7 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
       {
         S32 exit_code = cache.s32;
         --st;
-        status = HALT_S_CREATE(exit_code);
+        status = HALT_E_CREATE(exit_code);
         goto outside;
       }
       HANDLE_INSTR(DUPLICATE_ANY)
