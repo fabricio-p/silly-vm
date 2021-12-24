@@ -5,10 +5,13 @@ UTIL_OBJS  := $(UTIL:util/%.c=build/%.o)
 EXEC       := silly
 CFLAGS     := -std=c99 -Wall -Wextra -I include -I cake_libs/ -O0 -g \
               -Wno-unused-function -Wno-unused-parameter -Werror
-CC	       ?= clang
+CC	       ?= gcc
 TESTS      := $(wildcard test/*.c)
 TESTS_OBJS := $(TESTS:test/%_test.c=build/%_test.o)
 
+ifeq ($(DEBUG), true)
+	CFLAGS += -DDEBUG
+endif
 ifeq ($(ENV), dev)
 	CFLAGS += -DENV_DEV
 endif
@@ -16,7 +19,7 @@ ifeq ($(STAGE), preproc)
 	CFLAGS += -E
 endif
 
-.PHONY: all util objs clean
+.PHONY: all util objs exec_test functable_parser_test test clean
 
 all: objs $(EXEC)
 
@@ -36,18 +39,18 @@ build/%.o: test/%.c
 	@mkdir -p build
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-common_test: build/common_test.o build/silly_common.o
-	cc -o bin/$@ $^ -lcunit
-
 exec_test: build/exec_test.o build/exec.o
+	@mkdir -p bin
 	cc -o bin/$@ $^ -lcunit
 
 functable_test: test/functable_test.c
+	@mkdir -p bin
 	cc $(CFLAGS) -o bin/$@ $^ -lcunit -lxxhash
 
+parser_test: build/parser.o build/env.o build/parser_test.o
+	@mkdir -p bin
+	cc -o bin/$@ $^ -lcunit
+
 clean:
-	@for f in $$(find build -type f) $$(find bin -type f); do \
-		if [ -f $$f ]; then \
-			rm $$f ; \
-		fi ; \
-	done;
+	@if [ -d build ]; then rm -rf build; fi
+	@if [ -d bin ]; then rm -rf bin; fi
