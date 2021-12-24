@@ -42,11 +42,9 @@ void test_const(void)
   WRITE_F32(&func.code[29], 33.232);
   WRITE_F64(&func.code[34], 69.4819392);
   func.code_end = func.code + 42;
-  char name[8];
-  *(U32 *)name = 3;
-  strcpy(&name[sizeof(U32)], "foo");
-  func.name = (PStr *)&(name[0]);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  func.name.len = 3;
+  func.name.str = "foo";
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.st - frame.sb, 6);
 
@@ -90,10 +88,8 @@ void test_add(void)
   frame.frame_index = 0;
   frame.ip          = NULL;
 
-  char name[16];
-  WRITE_U32(name, sizeof("anonymous") - 1);
-  sprintf(&(name[sizeof(U32)]), "anonymous");
-  func.name = (PStr *)name;
+  func.name.len = 9;
+  func.name.str = "anonymous";
   func.type = (SType *)(U16[]) { 0, 0 };
   func.code = (U8[]) {
     INSTR(CONST_U32), 0, 0, 0, 0,
@@ -103,7 +99,7 @@ void test_add(void)
   func.code_end = func.code + 11;
   WRITE_U32(func.code + 1, 38199);
   WRITE_U32(func.code + 6, 2819427);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.ip, func.code_end);
   CU_ASSERT_EQUAL_FATAL(frame.st - frame.sb, 1);
@@ -119,7 +115,7 @@ void test_add(void)
   func.code_end = func.code + 11;
   WRITE_S32(func.code + 1, -3917);
   WRITE_S32(func.code + 6, 3929);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.ip, func.code_end);
   CU_ASSERT_PTR_EQUAL_FATAL(frame.st, &(frame.sb[1]));
@@ -135,7 +131,7 @@ void test_add(void)
   func.code_end = func.code + 19;
   WRITE_U64(func.code + 1, 38195619);
   WRITE_U64(func.code + 10, 199437957);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.ip, func.code_end);
   CU_ASSERT_PTR_EQUAL_FATAL(frame.st, &(frame.sb[1]));
@@ -151,7 +147,7 @@ void test_add(void)
   func.code_end = func.code + 19;
   WRITE_S64(func.code + 1, -39104782ll);
   WRITE_S64(func.code + 10, 39190ll);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.ip, func.code_end);
   CU_ASSERT_PTR_EQUAL_FATAL(frame.st, &(frame.sb[1]));
@@ -167,7 +163,7 @@ void test_add(void)
   func.code_end = func.code + 11;
   WRITE_F32(func.code + 1, 38.188f);
   WRITE_F32(func.code + 6, 2.434f);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.ip, func.code_end);
   CU_ASSERT_PTR_EQUAL_FATAL(frame.st, &(frame.sb[1]));
@@ -183,7 +179,7 @@ void test_add(void)
   func.code_end = func.code + 19;
   WRITE_F64(func.code + 1, 79.16493854);
   WRITE_F64(func.code + 10, 387.37398);
-  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_S_OK);
+  CU_ASSERT_EQUAL_FATAL(SFunc_exec(NULL, &frame), SILLY_E_OK);
 
   CU_ASSERT_EQUAL_FATAL(frame.ip, func.code_end);
   CU_ASSERT_PTR_EQUAL_FATAL(frame.st, &(frame.sb[1]));
