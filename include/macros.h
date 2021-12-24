@@ -5,7 +5,8 @@
 
 #ifdef ENV_DEV
 #define LOG_DEBUG(...) {              \
-  printf("[DEBUG(%d)]: ", __LINE__);  \
+  printf("[DEBUG("__FILE__", %d)]: ", \
+         __LINE__);                   \
   printf(__VA_ARGS__);                \
   printf("\n");                       \
 }

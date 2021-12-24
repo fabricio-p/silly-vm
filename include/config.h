@@ -27,4 +27,10 @@
 #define SILLY_CPU_UNALIGNED_POINTERS 0
 #endif
 
+#if defined(__LITTLE_ENDIAN__)
+#define SILLY_LITTLE_ENDIAN 1
+#else
+#define SILLY_LITTLE_ENDIAN 0
+#endif
+
 #endif /* __SILLY_CONFIG_H__ */
