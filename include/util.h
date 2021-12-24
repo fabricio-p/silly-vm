@@ -11,14 +11,14 @@ static void print_value(SValue *val)
   case TYPE(type):                          \
     printf(fmt, val->field); break
 
-    print_case(U32, "%lu",   u32);
-    print_case(S32, "%li",   s32);
-    print_case(U64, "%llu",  u64);
-    print_case(S64, "%lli",  s64);
-    print_case(F32, "%.6f",  f32);
-    print_case(F64, "%.12F", f64);
+    print_case(U32, "%lu",    u32);
+    print_case(S32, "%li",    s32);
+    print_case(U64, "%llu",   u64);
+    print_case(S64, "%lli",   s64);
+    print_case(F32, "%.6f",   f32);
+    print_case(F64, "%.12lF", f64);
   default:
-    puts("unknown type");
+    printf("unknown type");
 #undef print_case
   }
 }
