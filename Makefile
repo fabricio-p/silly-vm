@@ -43,9 +43,9 @@ exec_test: build/exec_test.o build/exec.o
 	@mkdir -p bin
 	cc -o bin/$@ $^ -lcunit
 
-functable_test: test/functable_test.c
+functable_test: build/functable_test.o build/functable.o
 	@mkdir -p bin
-	cc $(CFLAGS) -o bin/$@ $^ -lcunit -lxxhash
+	cc -o bin/$@ $^ -lcunit -lxxhash
 
 parser_test: build/parser.o build/env.o build/parser_test.o
 	@mkdir -p bin
