@@ -3,6 +3,19 @@
 #include "silly.h"
 #include "macros.h"
 
+#ifdef DEBUG
+enum SValueKind {
+#define T(t) SILLY_TYPE_##t
+  T(VOID) = (0 << 2),
+  T(U32)  = (1 << 2),
+  T(S32)  = (2 << 2),
+  T(U64)  = (3 << 2),
+  T(S64)  = (4 << 2),
+  T(F32)  = (5 << 2),
+  T(F64)  = (6 << 2)
+#undef T
+};
+#else
 /* Value types */
 #define SILLY_TYPE_VOID (0 << 2)
 #define SILLY_TYPE_U32  (1 << 2)
@@ -11,6 +24,7 @@
 #define SILLY_TYPE_S64  (4 << 2)
 #define SILLY_TYPE_F32  (5 << 2)
 #define SILLY_TYPE_F64  (6 << 2)
+#endif /* DEBUG */
 
 /* Regular instructions  */
 // The instruction set of the bytecode
