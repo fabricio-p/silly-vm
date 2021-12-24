@@ -2,6 +2,7 @@
 #define SILLY_H
 #include <stdlib.h>
 #include <stdint.h>
+// #include <c-bump-alloc/lib.h>
 
 // Typedefs of basic primitive types and structs
 typedef unsigned char      U8;
@@ -12,6 +13,9 @@ typedef unsigned long      U32;
 typedef signed   long      S32;
 typedef unsigned long long U64;
 typedef signed   long long S64;
+typedef          int       Int;
+typedef unsigned int       Uint;
+typedef signed   int       Sint;
 
 typedef float      F32;
 typedef double     F64;
@@ -21,19 +25,37 @@ typedef char       *Str;
 typedef char const *CStr;
 typedef void       *voidptr;
 typedef U8         SValueKind;
+typedef U8         Bool;
+
+#ifdef DEBUG // so gdb shows us this instead of just integers during debug
+#define E(e) SILLY_E_##e
+typedef enum {
+  E(OK) = 0,
+  E(HALT),
+  E(OOM),
+  E(SO),
+  E(CDE),
+  E(CRASH),
+  E(PARSE_INVALID_TYPE_SIZE)
+} SStatus;
+#undef E
+#else
+#define SILLY_E_OK    0
+#define SILLY_E_HALT  1
+#define SILLY_E_OOM   2 // (O)ut (O)f (M)emory
+#define SILLY_E_SO    3 // (S)tack (O)verflow
+#define SILLY_E_CDE   4 // (C)all (D)epth (E)xceeded
+#define SILLY_E_CRASH 5
+// Errors that occur only during bytecode parsing
+#define SILLY_E_PARSE_INVALID_TYPE_SIZE 6
+
 typedef Ssize      SStatus;
+#endif
 
-#define SILLY_S_OK    0
-#define SILLY_S_HALT  1
-#define SILLY_S_OOM   2 // (O)ut (O)f (M)emory
-#define SILLY_S_SO    3 // (S)tack (O)verflow
-#define SILLY_S_CDE   4 // (C)all (D)epth (E)xceeded
-#define SILLY_S_CRASH 5
-
-typedef struct PStr {
+/* typedef struct PStr {
   U32 len;
   U8  str[1];
-} PStr;
+} PStr; */
 
 // Internal VM structs
 typedef struct SType {
@@ -46,7 +68,11 @@ typedef struct SFunc {
   SType const *type;
   U8    const *code;
   U8    const *code_end;
-  PStr  const *name;
+  // PStr  const *name;
+  struct {
+    Usize len;
+    CStr  str;
+  }           name;
   /* struct {
     Usize max : 15;
     Usize is_reported : 1;
@@ -110,17 +136,37 @@ struct SCallFrame {
 typedef struct SModuleInfo SModuleInfo;
 
 typedef struct SModule {
-  CStr        path;
-  SModuleInfo *raw;
-  SType       **types;
-  SFuncTable  function_table;
+  CStr       path;
+  struct {
+    U8  *buffer;
+    U32 type_sec_size;
+    U32 func_sec_size;
+    U32 data_sec_size;
+    U32 code_sec_size;
+    struct {
+      U16 min;
+      U16 max;
+    }   mem_cfg;
+  }          raw;
+  struct {
+    voidptr types_buffer;
+    voidptr bytecode_buffer;
+    U8      *data_buffer;
+  }          loaded;
+  SType      **types;
+  U8         **data; // like, from the data section. idk why I need this
+  SFuncTable func_table;
+  SFuncTable exports;
 } SModule;
 
+typedef struct AllocNode AllocNode;
+
 struct SEnv {
-  SStack  stack;
-  SMemory memory;
-  SModule *modules;
-  SFunc   *all_functions;
+  SStack    stack;
+  SMemory   memory;
+  SModule   *module_pool;
+  SFunc     *func_pool;
+  AllocNode *type_pool_chain;
 };
 
 #endif /* SILLY_H */
