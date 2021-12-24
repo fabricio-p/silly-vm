@@ -102,11 +102,108 @@ F64 READ_F64(void const *const ptr)
 
 #endif /* SILLY_CPU_UNALIGNED_ADDRESSES != 0 */
 
+#define STORE_U8(ptr, val) WRITE_U8(ptr, val)
+#define STORE_S8(ptr, val) WRITE_S8(ptr, val)
+#define STORE_F32(ptr, val) WRITE_F32(ptr, val)
+#define STORE_F64(ptr, val) WRITE_F64(ptr, val)
+#define LOAD_U8(ptr) READ_U8(ptr)
+#define LOAD_S8(ptr) READ_S8(ptr)
+#define LOAD_F32(ptr, val) READ_F32(ptr, val)
+#define LOAD_F64(ptr, val) READ_F64(ptr, val)
+
+#if SILLY_LITTLE_ENDIAN != 0
+#define STORE_U16(ptr, val) WRITE_U16(ptr, val)
+#define STORE_U32(ptr, val) WRITE_U32(ptr, val)
+#define STORE_U64(ptr, val) WRITE_U64(ptr, val)
+#define STORE_S16(ptr, val) WRITE_S16(ptr, val)
+#define STORE_S32(ptr, val) WRITE_S32(ptr, val)
+#define STORE_S64(ptr, val) WRITE_S64(ptr, val)
+
+#define LOAD_U16(ptr) READ_U16(ptr)
+#define LOAD_U32(ptr) READ_U32(ptr)
+#define LOAD_U64(ptr) READ_U64(ptr)
+#define LOAD_S16(ptr) READ_S16(ptr)
+#define LOAD_S32(ptr) READ_S32(ptr)
+#define LOAD_S64(ptr) READ_S64(ptr)
+#else
+#define STORE_U16(ptr, val)             \
+  do {                                  \
+    union {                             \
+      U16 u16;                          \
+      U8  u8[2];                        \
+    } v = { .u16 = (val) };             \
+    U8 *u8_ptr = (ptr);                 \
+    u8_ptr[0] = v.u8[1];                \
+    u8_ptr[1] = v.u8[0];                \
+  } while (0);
+#define STORE_U32(ptr, val)             \
+  do {                                  \
+    union {                             \
+      U32 u32;                          \
+      U16 u16[2];                       \
+    } v = { .u32 = (val) };             \
+    U16 *u16_ptr = (ptr);               \
+    STORE_U16(&(u16_ptr[0]), v.u16[1]); \
+    STORE_U16(&(u16_ptr[1]), v.u16[0]); \
+  } while (0);
+#define STORE_U64(ptr, val)             \
+  do {                                  \
+    union {                             \
+      U64 u64;                          \
+      U32 u32[2];                       \
+    } v = { .u64 = (val) };             \
+    U32 *u32_ptr = (ptr);               \
+    STORE_U32(&(u32_ptr[0]), v.u32[1]); \
+    STORE_U32(&(u32_ptr[1]), v.u32[0]); \
+  } while (0);
+#define STORE_S16(ptr, val) STORE_U16(ptr, (U16)(val))
+#define STORE_S32(ptr, val) STORE_U32(ptr, (U32)(val))
+#define STORE_S64(ptr, val) STORE_U64(ptr, (U64)(val))
+
+__inline__
+U16 LOAD_U16(void *ptr)
+{
+  union {
+    U8  u8[2];
+    U16 u16;
+  } v = { .u8[1] = READ_U8(ptr), .u8[0] = READ_U8(ptr + 1) };
+  return v.u16;
+}
+__inline__
+U32 LOAD_U32(void *ptr)
+{
+  union {
+    U16 u16[2];
+    U32 u32;
+  } v = {
+    .u16[1] = LOAD_U16(ptr),
+    .u16[0] = LOAD_U16(ptr + sizeof(U16))
+  };
+  return v.u32;
+}
+__inline__
+U64 LOAD_U64(void *ptr)
+{
+  union {
+    U32 u32[2];
+    U64 u64;
+  } v = {
+    .u32[1] = LOAD_U32(ptr),
+    .u32[0] = LOAD_U32(ptr + sizeof(U32))
+  };
+  return v.u64;
+}
+#define LOAD_S16(ptr) ((S16)LOAD_U16(ptr))
+#define LOAD_S32(ptr) ((S32)LOAD_U32(ptr))
+#define LOAD_S64(ptr) ((S64)LOAD_U64(ptr))
+#endif /* SILLY_LITTLE_ENDIAN != 0 */
+
 #define CVECTOR_POINTERMODE
 #include <c-vector/lib.h> // CVECTOR_WITH_NAME, CVECTOR
 
 CVECTOR_WITH_NAME(SType *, STypeVec);
 CVECTOR_WITH_NAME(SValue,  SValueVec);
 CVECTOR_WITH_NAME(SFunc *, SFuncVec);
+CVECTOR(U8);
 
 #endif /* INTERNAL_H */
