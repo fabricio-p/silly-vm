@@ -52,20 +52,10 @@ void test_parse_type_section(void)
   );
   voidptr type_p = mod.loaded.types_buffer;
   CU_ASSERT_PTR_NOT_NULL_FATAL(type_p);
-  LOG_EVAL(mod.types[0], "p");
-  LOG_EVAL(mod.types[1], "p");
-  LOG_EVAL(type_p, "p");
-  LOG_EVAL(buffer, "p");
   CU_ASSERT_EQUAL_FATAL(mod.types[0], type_p);
   CU_ASSERT_EQUAL_FATAL(mod.types[1], type_p + offsetof(SType, types) + 4);
   CU_ASSERT_EQUAL_FATAL(mod.types[0]->param_count, 3);
   CU_ASSERT_EQUAL_FATAL(mod.types[0]->result_count, 1);
-  for (Int i = 0; i < 4; ++i)
-  {
-    // TODO: Look at this tomorrow
-    LOG_DEBUG("%s, %s\n", type_name(types1[i]),
-              type_name(mod.types[0]->types[i]));
-  }
   CU_ASSERT_FATAL(memcmp(mod.types[0]->types, types1, 4) == 0);
   CU_ASSERT_EQUAL_FATAL(mod.types[1]->param_count, 4);
   CU_ASSERT_EQUAL_FATAL(mod.types[1]->result_count, 2);

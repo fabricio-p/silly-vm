@@ -17,8 +17,7 @@ void test_const(void)
   stack.frames      = &frame;
   stack.call_depth  = 1;
 
-  frame.cache       = (SValue) { .kind = 0, .u64 = 0 };
-  frame.sl          = NULL;
+  frame.sl          = stack_data;
   frame.sb          = stack_data;
   frame.st          = stack_data;
   frame.function    = &func;
@@ -79,8 +78,7 @@ void test_add(void)
   stack.frames      = &frame;
   stack.call_depth  = 1;
 
-  frame.cache       = (SValue) { .kind = 0, .u64 = 0 };
-  frame.sl          = NULL;
+  frame.sl          = stack_data;
   frame.sb          = stack_data;
   frame.st          = stack_data;
   frame.function    = &func;

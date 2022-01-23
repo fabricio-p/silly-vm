@@ -40,8 +40,6 @@ void test_get(void)
   SFuncTable_insert(&tbl, &func);
   CU_ASSERT_EQUAL_FATAL(header->used, 1);
   SFunc *funcp = SFuncTable_get(tbl, "a_function", func.name.len);
-  LOG_EVAL(*(Usize *)name, "u");
-  LOG_EVAL(funcp, "p");
   CU_ASSERT_PTR_EQUAL_FATAL(funcp, &func);
   SFuncTable_cleanup(tbl);
 }
