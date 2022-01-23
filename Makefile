@@ -19,7 +19,7 @@ ifeq ($(STAGE), preproc)
 	CFLAGS += -E
 endif
 
-.PHONY: all util objs exec_test functable_parser_test test clean
+.PHONY: all util objs tests exec_test functable_parser_test test clean
 
 all: objs $(EXEC)
 
@@ -38,6 +38,15 @@ build/%.o: src/%.c
 build/%.o: test/%.c
 	@mkdir -p build
 	$(CC) $(CFLAGS) -c $^ -o $@
+
+tests: $(TESTS:test/%.c=%)
+
+run_tests: $(TESTS:test/%.c=%)
+	for test in $^; do \
+		echo "Running test $$test..."; \
+		./bin/$$test b; \
+		echo "...Finished test $$test"; \
+	done
 
 exec_test: build/exec_test.o build/exec.o
 	@mkdir -p bin
