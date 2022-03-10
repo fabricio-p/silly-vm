@@ -1,5 +1,6 @@
 #include "env.h"
 #include "macros.h"
+#include "internal.h"
 
 SStatus AllocChain_alloc(AllocNode **head, Usize size,
                          voidptr *buffer_p)
@@ -47,4 +48,33 @@ void AllocChain_free(AllocNode **current_p)
     free(current);
     *current_p = NULL;
   }
+}
+
+void SProcess_create(SEnv *env, SProcess *proc, SProcess *parent,
+                     SProcInfo *info, SModule *mod)
+{
+  proc->pid = SProcesses_len(env->all_processes);
+  proc->init_func = &(mod->functions[info->init_func_idx]);
+  proc->finish_func = &(mod->functions[info->finish_func_idx]);
+  proc->listener = &(mod->functions[info->listener_func_idx]);
+  proc->children = NULL;
+  proc->parent = parent;
+#ifdef SILLY_PROCESS_TRACING
+  proc->mod = mod;
+  proc->info = info;
+#endif
+
+  proc->stack.current_frame = &(proc->stack.frames[0]);
+  proc->memory = NULL;
+  proc->memory_size = 0;
+  proc->exit_code = 0;
+}
+
+SStatus SProcess_spawn(SEnv *env, SProcess *proc, SMessage const *message)
+{
+  SStatus status = SILLY_E_OK;
+  
+
+//catch:
+  return status;
 }

@@ -4,10 +4,6 @@
 #include "code.h"
 #include "macros.h"
 #include "code.h"
-#define throw(err) { status = SILLY_E_##err; goto catch; }
-#define throw_if(cond, err) if (cond) { throw(err); }
-#define try(s) if ((status = (s)) != SILLY_E_OK) { goto catch; }
-
 #define SECTION_PARSER(nm)                                            \
   SStatus parse_##nm##_section(SEnv *env, SModule *mod,               \
                                U8 const *const ptr, U32 const size)

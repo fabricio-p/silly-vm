@@ -142,6 +142,5 @@ outside:
   print_call_frame(frame);
   frame->st = st;
   frame->ip = ip;
-  frame->cache = cache;
   return status;
 }

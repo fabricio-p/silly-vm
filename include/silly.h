@@ -2,7 +2,7 @@
 #define SILLY_H
 #include <stdlib.h>
 #include <stdint.h>
-// #include <c-bump-alloc/lib.h>
+#include "config.h"
 
 // Typedefs of basic primitive types and structs
 typedef unsigned char      U8;
@@ -26,6 +26,7 @@ typedef char const *CStr;
 typedef void       *voidptr;
 typedef U8         SValueKind;
 typedef U8         Bool;
+typedef U8         *ByteVec;
 
 #ifdef DEBUG // so gdb shows us this instead of just integers during debug
 #define E(e) SILLY_E_##e
@@ -52,10 +53,10 @@ typedef enum {
 typedef Ssize      SStatus;
 #endif
 
-/* typedef struct PStr {
-  U32 len;
-  U8  str[1];
-} PStr; */
+typedef struct SStackFrame SStackFrame;
+typedef struct SCallFrame  SCallFrame;
+typedef struct SEnv        SEnv;
+typedef struct SProcess    SProcess;
 
 // Internal VM structs
 typedef struct SType {
@@ -77,63 +78,107 @@ typedef struct SFunc {
     Usize max : 15;
     Usize is_reported : 1;
   } stack_usage; */
-  // void  (*native)(SCallFrame *);
+  void  (*native)(SEnv *, SProcess *);
 } SFunc;
 typedef SFunc **SFuncTable;
+
+typedef U32 SPid;
+
+#ifdef DEBUG
+typedef enum SMessageKind {
+#define K(k) SILLY_MESSAGE_##k
+  K(UNINITIALISED) = -1,
+  K(SIGNAL),
+  K(DATA)
+#undef K
+} SMessageKind;
+#else
+typedef signed char SMessageKind;
+#define SILLY_MESSAGE_UNINITIALISED -1
+#define SILLY_MESSAGE_SIGNAL        0
+#define SILLY_MESSAGE_DATA          1
+#endif
+
+typedef struct SMessage {
+  U64          tag;
+  union {
+    Sint    signal;
+    ByteVec data;
+  };
+  SPid         sender;
+#if SILLY_CPU_32BIT != 0
+#define PADDING sizeof(U64) - sizeof(SMessageKind)
+#else
+#define PADDING sizeof(U32) - sizeof(SMessageKind)
+#endif
+  U8           __padd[PADDING];
+#undef PADDING
+  SMessageKind kind;
+}__attribute__((packed)) SMessage;
 
 // A stack value
 typedef struct SValue {
   union {
-    U32 u32;
-    S32 s32;
-    F32 f32;
-    U64 u64;
-    S64 s64;
-    F64 f64;
+    U32      u32;
+    S32      s32;
+    F32      f32;
+    U64      u64;
+    S64      s64;
+    F64      f64;
   };
   SValueKind kind;
   U8 __padding[16 - sizeof(U64) - sizeof(SValueKind)];
-} SValue;
+}__attribute__((packed)) SValue;
 
-typedef struct SStackFrame SStackFrame;
-typedef struct SCallFrame  SCallFrame;
-typedef struct SEnv        SEnv;
-
-typedef struct SStack {
-  SValue     *data;
-  U32        size;
-  U32        max_size;
-  SCallFrame *frames;
-  U32        call_depth;
-} SStack;
-
-typedef struct SMemory {
-  U32 page_count;
-  U32 max_pages;
-  U8  data;
-} SMemory;
+typedef struct SStack SStack;
 
 struct SCallFrame {
-  // the value at the stack top
-  SValue      cache;
   // (s)tack (l)ocals, the pointer to where the locals start
   SValue      *sl;
-  // (s)tack (b)ottom, the pointer to where the locals end and operational
-  // stack where you push and pop starts
+  // (s)tack (b)ottom, the pointer to where after the locals
   SValue      *sb;
   // (s)tack (t)op, the pointer at the slot right after the last used one
   SValue      *st;
   // the pointer to the function that called
   SFunc       *function;
   SStack      *stack;
-  U32         frame_index;
-  // will tell at which opcode failure occurred if it occurs
+  Int         frame_index;
+  // will tell at which opcode failure occurred if it does
   U8 const    *ip;
   // the size of the stack in SValues it can fit
-  U32         size;
-};
+  // U32         size;
+#define ALIGN(n) (((n) + 7) & ~7)
+#define DATA_SIZE (sizeof(uintptr_t) * 7)
+  U8          __padd[ALIGN(DATA_SIZE) - DATA_SIZE];
+#undef ALIGN
+#undef DATA_SIZE
+}__attribute__((packed));
 
-typedef struct SModuleInfo SModuleInfo;
+#define SILLY_STACK_SIZE 0x800
+#define SILLY_CALL_DEPTH 0x100
+struct SStack {
+  SValue     data[SILLY_STACK_SIZE];
+  SCallFrame frames[SILLY_CALL_DEPTH];
+  SCallFrame *current_frame;
+#define ALIGN(n) (((n) + 7) & ~7)
+#define DATA_SIZE                         \
+  (sizeof(voidptr) +                      \
+   sizeof(SValue) * SILLY_STACK_SIZE +    \
+   sizeof(SCallFrame) * SILLY_CALL_DEPTH)
+  U8          __padd[ALIGN(DATA_SIZE) - DATA_SIZE];
+#undef ALIGN
+#undef DATA_SIZE
+}__attribute__((packed));
+
+typedef struct SProcInfo {
+  U32 init_func_idx;
+  U32 listener_func_idx;
+  U32 finish_func_idx;
+  struct {
+    U16 min;
+    U16 max;
+  }   memory;
+} SProcInfo;
 
 typedef struct SModule {
   CStr       path;
@@ -143,10 +188,7 @@ typedef struct SModule {
     U32 func_sec_size;
     U32 data_sec_size;
     U32 code_sec_size;
-    struct {
-      U16 min;
-      U16 max;
-    }   mem_cfg;
+    U32 proc_sec_size;
   }          raw;
   struct {
     voidptr types_buffer;
@@ -155,15 +197,24 @@ typedef struct SModule {
   }          loaded;
   SType      **types;
   U8         **data; // like, from the data section. idk why I need this
+  SProcInfo  *processes;
+  SFunc      *functions;
   SFuncTable func_table;
   SFuncTable exports;
 } SModule;
 
-typedef struct AllocNode AllocNode;
+/*
+ * typedef struct SQueuedProcess SQueuedProcess;
+ * typedef struct SQueue         SQueue;
+ */
+typedef struct AllocNode      AllocNode;
 
 struct SEnv {
-  SStack    stack;
-  SMemory   memory;
+  // SQueue    proc_queue;
+  union {
+    SProcess *all_processes;
+    SProcess *main_process;
+  };
   SModule   *module_pool;
   SFunc     *func_pool;
   AllocNode *type_pool_chain;

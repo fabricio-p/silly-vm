@@ -25,18 +25,27 @@ static void print_value(SValue *val)
 static void print_call_frame(SCallFrame *frame)
 {
   printf("============ Stack Frame (");
-  fwrite(frame->function->name->str, frame->function->name->len,
+  fwrite(frame->function->name.str, frame->function->name.len,
          1, stdout);
   puts(") ============");
+  printf("Locals:\n");
+  for (SValue *local = frame->sl; local < frame->sb; ++local)
+  {
+    printf("-%*s[%d] %s: ", (int)frame->function->name.len + 3, "",
+           local - frame->sl, type_name(local->kind));
+    print_value(local);
+    putc('\n', stdout);
+  }
+  printf("Stack:\n");
   for (SValue *val = frame->st - 1, *beg = frame->sb; val >= beg; --val)
   {
-    printf("-%*s[%d] %s: ", (int)frame->function->name->len + 3, "",
+    printf("-%*s[%d] %s: ", (int)frame->function->name.len + 3, "",
            val - beg, type_name(val->kind));
     print_value(val);
-    puts("");
+    putc('\n', stdout);
   }
   printf("========================================");
-  for (Usize i = 0; i < frame->function->name->len; ++i)
+  for (Usize i = 0; i < frame->function->name.len; ++i)
   {
     putc('=', stdout);
   }

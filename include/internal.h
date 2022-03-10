@@ -198,12 +198,37 @@ U64 LOAD_U64(void *ptr)
 #define LOAD_S64(ptr) ((S64)LOAD_U64(ptr))
 #endif /* SILLY_LITTLE_ENDIAN != 0 */
 
+/**
+ * ========== START ==========
+ * Specification for functions that use this pattern of error handling:
+ * - The function *MUST* have a return type of `SStatus`
+ * - The function *MUST* have a local variable called `status` of type
+ *   `SStatus`
+ * - The function *MUST* have a label called `catch`
+ * - At the `catch` label, checking/cleanup/nothing and the statement
+ *   `return status;` must be put, in that order
+ * - The function *MUST NOT* have more than one `return` statement
+ */
+#define throw(err) { status = SILLY_E_##err; goto catch; }
+#define throw_if(cond, err) if (cond) { throw(err); }
+#define try(s) if ((status = (s)) != SILLY_E_OK) { goto catch; }
+
+/*
+ * ==========  END  ==========
+ */
+
 #define CVECTOR_POINTERMODE
 #include <c-vector/lib.h> // CVECTOR_WITH_NAME, CVECTOR
 
 CVECTOR_WITH_NAME(SType *, STypeVec);
 CVECTOR_WITH_NAME(SValue,  SValueVec);
 CVECTOR_WITH_NAME(SFunc *, SFuncVec);
-CVECTOR(U8);
+CVECTOR_WITH_NAME(SProcInfo, SProcInfoVec);
+
+#define CVECTOR_POINTERMODE
+#define CVECTOR_NO_TYPEDEF
+#include <c-vector/lib.h> // CVECTOR_WITH_NAME, CVECTOR
+
+CVECTOR_WITH_NAME(U8, ByteVec);
 
 #endif /* INTERNAL_H */

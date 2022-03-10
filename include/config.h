@@ -33,4 +33,10 @@
 #define SILLY_LITTLE_ENDIAN 0
 #endif
 
+#if defined(BUILD_TARGET_ARM) || defined(BUILD_TARGET_X86_32)
+#define SILLY_CPU_32BIT 1
+#else
+#define SILLY_CPU_32BIT 0
+#endif
+
 #endif /* __SILLY_CONFIG_H__ */
