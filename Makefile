@@ -18,8 +18,11 @@ endif
 ifeq ($(STAGE), preproc)
 	CFLAGS += -E
 endif
+ifeq ($(LOGGING), colored)
+	CFLAGS += -DOUTCOLORS
+endif
 
-.PHONY: all util objs tests exec_test functable_parser_test test clean
+.PHONY: all util objs tests exec_test parser_test test clean
 
 all: objs $(EXEC)
 
@@ -29,7 +32,7 @@ util: $(UTIL_OBJS)
 
 $(EXEC): $(OBJS) $(UTIL_OBJS)
 	@mkdir -p bin
-	$(CC) -o bin/$@ $^ -lxxhash
+	$(CC) -o bin/$@ $^
 
 build/%.o: src/%.c
 	@mkdir -p build
@@ -52,11 +55,7 @@ exec_test: build/exec_test.o build/exec.o
 	@mkdir -p bin
 	cc -o bin/$@ $^ -lcunit
 
-functable_test: build/functable_test.o build/functable.o
-	@mkdir -p bin
-	cc -o bin/$@ $^ -lcunit -lxxhash
-
-parser_test: build/parser.o build/env.o build/parser_test.o
+parser_test: build/parser.o build/parser_test.o
 	@mkdir -p bin
 	cc -o bin/$@ $^ -lcunit
 
