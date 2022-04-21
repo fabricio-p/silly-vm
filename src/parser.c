@@ -1,5 +1,4 @@
 #include "parser.h"
-#include "env.h"
 #include "internal.h"
 #include "code.h"
 #include "macros.h"
@@ -10,77 +9,89 @@
 
 #define SECTION_PARSER(nm)                                            \
   SStatus parse_##nm##_section(SEnv *env, SModule *mod,               \
-                               U8 const *const ptr, U32 const size)
+                               U8 const *const ptr, SSecInfo const info)
 
 SECTION_PARSER(type)
 {
   SStatus status = SILLY_E_OK;
-  U8 const *const end = ptr + size;
-  U32 count = 0;
-  voidptr buffer = NULL;
-  SType **types = mod->types;
-  LOG_DEBUG("foo\n");
-  if (types == NULL)
+  U8 const *const end = ptr + info.size;
+  U8 const *type_ptr = ptr;
+  Uint idx = 0;
+  for (; idx < info.item_count && type_ptr < end; ++idx)
   {
-    LOG_DEBUG("types is NULL\n");
-    types = STypeVec_with_length(count);
-  }
-  LOG_DEBUG("\n");
-  throw_if(types == NULL, OOM);
-  LOG_DEBUG("\n");
-  try(AllocChain_alloc(&(env->type_pool_chain), size, &buffer));
-  LOG_DEBUG("\n");
-  voidptr type_ptr = buffer;
-  // U8 *type_ptr = buffer;
-  U8 const *raw_type_ptr = ptr;
-  LOG_EVAL(ptr, "p");
-  LOG_EVAL(raw_type_ptr, "p");
-  for (; raw_type_ptr < end; ++count)
-  {
-    U16 param_count  = LOAD_U16(raw_type_ptr);
-    raw_type_ptr += sizeof(U16);
-    U16 result_count = LOAD_U16(raw_type_ptr);
-    raw_type_ptr += sizeof(U16);
-    U32 types_count  = param_count + result_count;
+    SType *type = STypeVec_push_empty(&(mod->types));
+    Uint param_count = LOAD_U16(type_ptr);
+    type_ptr += sizeof(U16);
+    Uint result_count = LOAD_U16(type_ptr);
+    type_ptr += sizeof(U16);
+    Uint types_count = param_count + result_count;
 
     // TODO: Put some size checks so we don't read memory outside buffer
-    SType *type = type_ptr;
+    //     : TODO: make it optional for custom builds for max startup
+    //             speed and shit like that
     type->param_count  = param_count;
     type->result_count = result_count;
-    memcpy(type->types, raw_type_ptr, types_count);
+    type->types = type_ptr;
     
-    raw_type_ptr += types_count;
-    // TODO: Do some more detailed error reporting system
-    throw_if(raw_type_ptr > end, PARSE_INVALID_TYPE_SIZE);
-
-    type_ptr += offsetof(SType, types) + types_count;
+    type_ptr += types_count;
+    // TODO: Create some more detailed error reporting system
+    throw_if(type_ptr > end, INVALID_TYPE_SIZE);
   }
-  throw_if(raw_type_ptr != end, PARSE_INVALID_TYPE_SIZE);
-  LOG_EVAL(count, "lu");
-  type_ptr = buffer;
-  // imo better than indexing
-  for (SType **current = types, **last = &(types[count]);
-       current < last; ++current)
-  {
-    LOG_EVAL(type_ptr, "p");
-    LOG_DEBUG("i = %lu\n", count - (last - current));
-    *current = type_ptr;
-    type_ptr += offsetof(SType, types) +
-                ((SType *)type_ptr)->param_count +
-                ((SType *)type_ptr)->result_count;
-  }
-
+  throw_if(type_ptr != end, INCORRECT_SECTION_SIZE);
+  throw_if(idx != info.item_count, INCORRECT_TYPE_COUNT);
 catch:
   if (status != SILLY_E_OK)
   {
-    if (buffer != NULL)
-    {
-      AllocChain_free(&(env->type_pool_chain));
-    }
   }
-  mod->loaded.types_buffer = buffer;
-  mod->types = types;
-  LOG_EVAL(status, "d");
+  return status;
+}
+
+// TODO: Make functions to parse the other sections
+//       TODO: Figure out how data section should be used and loaded
+
+SECTION_PARSER(data)
+{
+  SStatus status = SILLY_E_OK;
+
+  LOG_ERROR("Parser of data section is not implemented\n");
+  exit(1);
+
+// catch:
+  return status;
+}
+
+SECTION_PARSER(function)
+{
+  SStatus status = SILLY_E_OK;
+  void const *const end = ptr + info.size;
+  void const *funcd_ptr = ptr;
+  Uint idx = 0;
+  for (; idx < info.item_count && funcd_ptr < end; ++idx)
+  {
+    SFunc *func = SFuncVec_push_empty(&(mod->functions));
+    func->raw.offset = funcd_ptr - (void const *)ptr; // buffer;
+    func->raw.type_idx = LOAD_U32(funcd_ptr);
+    throw_if((Int)func->raw.type_idx >= STypeVec_len(mod->types),
+             INVALID_TYPE_INDEX);
+    func->type = &(mod->types[func->raw.type_idx]);
+    funcd_ptr += sizeof(U32);
+
+    func->raw.code_offset = LOAD_U32(funcd_ptr);
+    funcd_ptr += sizeof(U32);
+
+    // TODO: Check for overflows here
+    func->locals.count = LOAD_U16(funcd_ptr);
+    funcd_ptr += sizeof(U16);
+    func->locals.types = func->locals.count == 0 ? NULL : funcd_ptr;
+    funcd_ptr += func->locals.count;
+
+    func->name.len = LOAD_U8(funcd_ptr++);
+    func->name.str = funcd_ptr;
+    funcd_ptr += func->name.len;
+  }
+  throw_if(funcd_ptr != end,       INCORRECT_SECTION_SIZE);
+  throw_if(idx != info.item_count, INCORRECT_FUNCTION_COUNT);
+catch:
   return status;
 }
 
