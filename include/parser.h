@@ -9,9 +9,13 @@
  *
  * U8 const signature[8]      "\0SillyVM"
  * U32 LE type_section_size
+ * U32 LE type_count
  * U32 LE func_section_size
+ * U32 LE func_count
  * U32 LE data_section_size
+ * U32 LE data_count
  * U32 LE code_section_size
+ * U32 LE __padding
  * U8 {section:     type}[type_section_size]
  * U8 {section: function}[func_section_size]
  * U8 {section:     data}[data_section_size]
@@ -27,9 +31,16 @@
  * ## {section: function} format
  * <function>[]
  * ### <function> format
- * U32 code_offset
- * U8  name_length
- * U8  name[name_length]
+ * U32 LE type_index
+ * U32 LE code_offset
+ * U16 LE local_count
+ * U8     locals[local_count]
+ * U8     name_length
+ * U8     name[name_length]
+ *
+ * ## {section: code} format
+ * U32 LE size
+ * U8     bytecode[size]
  */
 
 /* typedef struct SSegmentInfo {
@@ -61,6 +72,13 @@
      ((SModule *)info)->raw.data_section.offset]) : NULL)
 */
 SStatus parse_module(SEnv *, SModule *);
-SStatus parse_type_section(SEnv *, SModule *, U8 const *const, U32 const);
+#define SECTION_PARSER(n)                                         \
+  SStatus parse_##n##_section(SEnv *, SModule *, U8 const *const, \
+                              SSecInfo const)
+SECTION_PARSER(type);
+SECTION_PARSER(data);
+SECTION_PARSER(function);
+
+#undef SECTION_PARSER
 
 #endif /* PARSER_H */
