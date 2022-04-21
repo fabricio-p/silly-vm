@@ -1,3 +1,4 @@
+#include <c-ansi-sequences/graphics.h>
 #include "silly.h"
 #include "macros.h"
 #include "exec.h"
@@ -14,21 +15,21 @@ HANDLE_INSTR(CONST_##type) {              \
 }
 
 #define push(val, type, field) {          \
-  st->field = (val);                      \
+  st->v.field = (val);                    \
   st->kind = (SILLY_TYPE_##type);         \
   ++st;                                   \
-  cache.field = (val);                    \
+  cache.v.field = (val);                  \
   cache.kind = (SILLY_TYPE_##type);       \
 }
-#define HANDLE_BINOP_INSTR(type, field, op, opname) \
-HANDLE_INSTR(opname##_##type) {                     \
-  --st;                                             \
-  cache.field = (st[-1].field op##= cache.field);   \
-  break;                                            \
+#define HANDLE_BINOP_INSTR(type, field, op, opname)     \
+HANDLE_INSTR(opname##_##type) {                         \
+  --st;                                                 \
+  cache.v.field = (st[-1].v.field op##= cache.v.field); \
+  break;                                                \
 }
 #define HANDLE_UNOP_INSTR(type, field, opname, action)  \
 HANDLE_INSTR(opname##_##type) {                         \
-  cache.field = st[-1].field = (action);                \
+  cache.v.field = st[-1].v.field = (action);            \
 }
 
 #define HALT_E_CREATE(exit_code)                      \
@@ -39,17 +40,23 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
   SStatus status = SILLY_E_OK;
   U8 const *ip = frame->function->code;
   U8 const *const end = frame->function->code_end;
-  SValue cache = { .kind = 0, .u64 = 0 };
-  SValue *sl = frame->sl;
-  // SValue *sb = frame->sb;
-  SValue *st = frame->st;
+  STaggedValue cache = { .kind = 0, .v.u64 = 0 };
+  STaggedValue *sl = frame->sl;
+  // STaggedValue *sb = frame->sb;
+  STaggedValue *st = frame->st;
   for (; ip < end;)
   {
 #ifdef ENV_DEV
-    printf("[ip: 0x%08x] ", ip - frame->function->code);
+#ifdef OUTCOLORS
+#define IP_FMT(s) ANSISEQ_SETFG256(154) s ANSISEQ_GR_RESET
+#else
+#define IP_FMT(s) s
+#endif /* OUTCOLORS */
+    printf("[ip: "IP_FMT("0x%08x")"] ",
+           ip - frame->function->code);
 #endif
     print_instruction(*ip);
-    switch (*(ip++) & COUNT_SILLY_INSTR)
+    switch (*(ip++))
     {
       HANDLE_INSTR(NOP)
       {
@@ -57,7 +64,7 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
       }
       HANDLE_INSTR(HALT_VM)
       {
-        S32 exit_code = cache.s32;
+        S32 exit_code = cache.v.s32;
         --st;
         status = HALT_E_CREATE(exit_code);
         goto outside;
@@ -65,7 +72,7 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
       HANDLE_INSTR(DUPLICATE_ANY)
       {
         st[1].kind = cache.kind;
-        st[1].u64  = cache.u64;
+        st[1].v.u64  = cache.v.u64;
         ++st;
         break;
       }
@@ -73,7 +80,7 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
       {
         --st;
         cache.kind = st[0].kind;
-        cache.u64  = st[0].u64;
+        cache.v.u64  = st[0].v.u64;
         break;
       }
       HANDLE_INSTR(GET_LOCAL)
@@ -81,21 +88,21 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
         ++st;
         U16 index = READ_U16(ip);
         ip += sizeof(U16);
-        SValue *local = &(sl[index]);
+        STaggedValue *local = &(sl[index]);
         st[0].kind = cache.kind = local->kind;
-        st[0].u64  = cache.u64  = local->u64;
+        st[0].v.u64  = cache.v.u64  = local->v.u64;
         break;
       }
       HANDLE_INSTR(SET_LOCAL)
       {
         U16 index = READ_U16(ip);
         ip += sizeof(U16);
-        SValue *local = &(sl[index]);
+        STaggedValue *local = &(sl[index]);
         local->kind = cache.kind;
-        local->u64  = cache.u64;
+        local->v.u64  = cache.v.u64;
         --st;
         cache.kind = st[0].kind;
-        cache.u64  = st[0].u64;
+        cache.v.u64  = st[0].v.u64;
         break;
       }
       HANDLE_CONST_INSTR(U32, u32);
@@ -135,7 +142,7 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
       USUAL_BINOPS(F64, f64);
 #undef USUAL_BINOPS
       default:
-        LOG_ERROR("FUCK, UNRECOGNIZED\n");
+        LOG_ERROR("UNRECOGNIZED OPCODE (0x%x)", *(ip - 1));
     }
   }
 outside:

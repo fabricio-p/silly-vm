@@ -1,10 +1,12 @@
 #ifndef CODE_H
 #define CODE_H
+#include <c-ansi-sequences/graphics.h>
 #include "silly.h"
 #include "macros.h"
 
 #ifdef DEBUG
-enum SValueKind {
+
+enum STaggedValueKind {
 #define T(t) SILLY_TYPE_##t
   T(VOID) = (0 << 2),
   T(U32)  = (1 << 2),
@@ -15,7 +17,17 @@ enum SValueKind {
   T(F64)  = (6 << 2)
 #undef T
 };
+
+enum SSecId {
+#define S(s) SILLY_SEC_##s
+  S(TYPE) = 1,
+  S(DATA),
+  S(FUNCTION),
+  S(CODE)
+#undef S
+};
 #else
+
 /* Value types */
 #define SILLY_TYPE_VOID (0 << 2)
 #define SILLY_TYPE_U32  (1 << 2)
@@ -24,6 +36,13 @@ enum SValueKind {
 #define SILLY_TYPE_S64  (4 << 2)
 #define SILLY_TYPE_F32  (5 << 2)
 #define SILLY_TYPE_F64  (6 << 2)
+
+/* Section ids */
+#define SILLY_SEC_TYPE     1
+#define SILLY_SEC_DATA     2
+#define SILLY_SEC_FUNCTION 3
+#define SILLY_SEC_CODE     4
+
 #endif /* DEBUG */
 
 /* Regular instructions  */
@@ -40,65 +59,60 @@ enum SValueKind {
 #define SILLY_INSTR_CONST_S64     7
 #define SILLY_INSTR_CONST_F32     8
 #define SILLY_INSTR_CONST_F64     9
-#define SILLY_INSTR_CONST_USIZE   10
 // Virtual registers
-#define SILLY_INSTR_SET_LOCAL     11
-#define SILLY_INSTR_SET_GLOBAL    12
-#define SILLY_INSTR_GET_LOCAL     13
-#define SILLY_INSTR_GET_GLOBAL    14
+#define SILLY_INSTR_SET_LOCAL     10
+#define SILLY_INSTR_GET_LOCAL     11
 // Operations on 32 bit unsigned integers
-#define SILLY_INSTR_ADD_U32       15
-#define SILLY_INSTR_SUB_U32       16
-#define SILLY_INSTR_MUL_U32       17
-#define SILLY_INSTR_DIV_U32       18
-#define SILLY_INSTR_MOD_U32       19
-#define SILLY_INSTR_LSHIFT_U32    20
-#define SILLY_INSTR_RSHIFT_U32    21
-#define SILLY_INSTR_REM_U32       22
+#define SILLY_INSTR_ADD_U32       12
+#define SILLY_INSTR_SUB_U32       13
+#define SILLY_INSTR_MUL_U32       14
+#define SILLY_INSTR_DIV_U32       15
+#define SILLY_INSTR_REM_U32       16
+#define SILLY_INSTR_LSHIFT_U32    17
+#define SILLY_INSTR_RSHIFT_U32    18
 // Operations on 32 bit signed integers
-#define SILLY_INSTR_ADD_S32       23
-#define SILLY_INSTR_SUB_S32       24
-#define SILLY_INSTR_MUL_S32       25
-#define SILLY_INSTR_DIV_S32       26
-#define SILLY_INSTR_MOD_S32       27
-#define SILLY_INSTR_LSHIFT_S32    28
-#define SILLY_INSTR_RSHIFT_S32    29
-#define SILLY_INSTR_REM_S32       30
+#define SILLY_INSTR_ADD_S32       19
+#define SILLY_INSTR_SUB_S32       20
+#define SILLY_INSTR_MUL_S32       21
+#define SILLY_INSTR_DIV_S32       22
+#define SILLY_INSTR_REM_S32       23
+#define SILLY_INSTR_LSHIFT_S32    24
+#define SILLY_INSTR_RSHIFT_S32    25
 // Operations on 64 bit unsigned integers
-#define SILLY_INSTR_ADD_U64       31
-#define SILLY_INSTR_SUB_U64       32
-#define SILLY_INSTR_MUL_U64       33
-#define SILLY_INSTR_DIV_U64       34
-#define SILLY_INSTR_MOD_U64       35
-#define SILLY_INSTR_LSHIFT_U64    36
-#define SILLY_INSTR_RSHIFT_U64    37
-#define SILLY_INSTR_REM_U64       38
+#define SILLY_INSTR_ADD_U64       26
+#define SILLY_INSTR_SUB_U64       27
+#define SILLY_INSTR_MUL_U64       28
+#define SILLY_INSTR_DIV_U64       29
+#define SILLY_INSTR_REM_U64       30
+#define SILLY_INSTR_LSHIFT_U64    31
+#define SILLY_INSTR_RSHIFT_U64    32
 // Operations on 64 bit signed integers
-#define SILLY_INSTR_ADD_S64       39
-#define SILLY_INSTR_SUB_S64       40
-#define SILLY_INSTR_MUL_S64       41
-#define SILLY_INSTR_DIV_S64       42
-#define SILLY_INSTR_MOD_S64       43
-#define SILLY_INSTR_LSHIFT_S64    44
-#define SILLY_INSTR_RSHIFT_S64    45
-#define SILLY_INSTR_REM_S64       46
+#define SILLY_INSTR_ADD_S64       33
+#define SILLY_INSTR_SUB_S64       34
+#define SILLY_INSTR_MUL_S64       35
+#define SILLY_INSTR_DIV_S64       36
+#define SILLY_INSTR_REM_S64       37
+#define SILLY_INSTR_LSHIFT_S64    38
+#define SILLY_INSTR_RSHIFT_S64    39
 // Operations on 32 bit floating points
-#define SILLY_INSTR_ADD_F32       47
-#define SILLY_INSTR_SUB_F32       48
-#define SILLY_INSTR_MUL_F32       49
-#define SILLY_INSTR_DIV_F32       50
-#define SILLY_INSTR_FLOOR_F32     51
-#define SILLY_INSTR_CEIL_F32      52
+#define SILLY_INSTR_ADD_F32       40
+#define SILLY_INSTR_SUB_F32       41
+#define SILLY_INSTR_MUL_F32       42
+#define SILLY_INSTR_DIV_F32       43
+#define SILLY_INSTR_REM_F32       44
+#define SILLY_INSTR_FLOOR_F32     45
+#define SILLY_INSTR_CEIL_F32      46
 // Operations on 64 bit floating points
-#define SILLY_INSTR_ADD_F64       53
-#define SILLY_INSTR_SUB_F64       54
-#define SILLY_INSTR_MUL_F64       55
-#define SILLY_INSTR_DIV_F64       56
-#define SILLY_INSTR_FLOOR_F64     57
-#define SILLY_INSTR_CEIL_F64      58
-#define SILLY_INSTR_SQRT_F64      59
+#define SILLY_INSTR_ADD_F64       47
+#define SILLY_INSTR_SUB_F64       48
+#define SILLY_INSTR_MUL_F64       49
+#define SILLY_INSTR_DIV_F64       50
+#define SILLY_INSTR_REM_F64       51
+#define SILLY_INSTR_FLOOR_F64     52
+#define SILLY_INSTR_CEIL_F64      53
+#define SILLY_INSTR_SQRT_F64      54
 
-#define COUNT_SILLY_INSTR         63
+#define COUNT_SILLY_INSTR         55
 
 #ifdef ENV_DEV
 typedef struct InstrInfo {
@@ -210,52 +224,71 @@ CStr type_name(U8 type)
 __inline__
 void print_instruction(U8 instr)
 {
+#ifdef OUTCOLORS
+#define OP_FMT(s) ANSISEQ_SETFG_MAGENTA s ANSISEQ_GR_RESET
+#define TYPE_FMT(s) ANSISEQ_SETFG256(216) s ANSISEQ_GR_RESET
+#define OPN_FMT(s)                                       \
+  ANSISEQ_GR_SEQ(ANSISEQ_FG256(234) ANSISEQ_BG256(115))   \
+  s ANSISEQ_GR_RESET
+#else
+#define OP_FMT(s) s
+#define TYPE_FMT(s) s
+#define OPN_FMT(s) s
+#endif /* OUTCOLORS */
   if (instr >= COUNT_SILLY_INSTR)
   {
-    LOG_ERROR("Unrecognized instruction, opcode: 0x%x\n", instr);
+    LOG_ERROR("Unrecognized instruction, opcode: "OP_FMT("0x%x")"\n",
+              instr);
   } else
   {
     InstrInfo const *const info = &instr_info[instr];
     if (info->name == NULL)
     {
-      printf("(0x%02x) -> opcode lacks descriptor\n", instr);
+      printf("(" OP_FMT("0x%02x") ") -> opcode lacks descriptor\n",
+             instr);
       return;
     }
-    printf("%s  \t(0x%02x) [", info->name, instr);
+    printf(OPN_FMT("%s")"  \t(" OP_FMT("0x%02x") ") [",
+           info->name, instr);
     if (info->stack_arg_count > 0)
     {
-      printf("%s", type_name(info->stack_arg_types[0]));
+      printf(TYPE_FMT("%s"), type_name(info->stack_arg_types[0]));
       for (Ssize i = 1; i < info->stack_arg_count; ++i)
       {
-        printf(", %s", type_name(info->stack_arg_types[i]));
+        printf(", " TYPE_FMT("%s"), type_name(info->stack_arg_types[i]));
       }
     } else
     {
-      printf("void");
+      printf(TYPE_FMT("void"));
     }
     printf("]    \t=>\t[");
     if (info->stack_result_count > 0)
     {
-      printf("%s", type_name(info->stack_result_types[0]));
+      printf(TYPE_FMT("%s"), type_name(info->stack_result_types[0]));
       for (Ssize i = 1; i < info->stack_result_count; ++i)
       {
-        printf(", %s", type_name(info->stack_result_types[i]));
+        printf(", " TYPE_FMT("%s"),
+               type_name(info->stack_result_types[i]));
       }
     } else
     {
-      printf("void");
+      printf(TYPE_FMT("void"));
     }
     printf("]\t{");
     if (info->immediate_arg_count > 0)
     {
-      printf("%s", type_name(info->immediate_arg_types[0]));
+      printf(TYPE_FMT("%s"), type_name(info->immediate_arg_types[0]));
       for (Ssize i = 1; i < info->immediate_arg_count; ++i)
       {
-        printf(", %s", type_name(info->immediate_arg_types[i]));
+        printf(", "TYPE_FMT("%s"),
+               type_name(info->immediate_arg_types[i]));
       }
     }
     printf("}\n");
   }
+#undef OP_FMT
+#undef TYPE_FMT
+#undef OPN_FMT
 }
 #else
 #define print_instruction(instr_buf)

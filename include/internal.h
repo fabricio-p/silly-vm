@@ -106,8 +106,8 @@ F64 READ_F64(void const *const ptr)
 #define STORE_S8(ptr, val) WRITE_S8(ptr, val)
 #define STORE_F32(ptr, val) WRITE_F32(ptr, val)
 #define STORE_F64(ptr, val) WRITE_F64(ptr, val)
-#define LOAD_U8(ptr) READ_U8(ptr)
-#define LOAD_S8(ptr) READ_S8(ptr)
+#define LOAD_U8(ptr) (*(U8 *)(ptr))
+#define LOAD_S8(ptr) (*(S8 *)(ptr))
 #define LOAD_F32(ptr, val) READ_F32(ptr, val)
 #define LOAD_F64(ptr, val) READ_F64(ptr, val)
 
@@ -200,10 +200,9 @@ U64 LOAD_U64(void *ptr)
 
 #define CVECTOR_POINTERMODE
 #include <c-vector/lib.h> // CVECTOR_WITH_NAME, CVECTOR
-
-CVECTOR_WITH_NAME(SType *, STypeVec);
-CVECTOR_WITH_NAME(SValue,  SValueVec);
-CVECTOR_WITH_NAME(SFunc *, SFuncVec);
+CVECTOR_WITH_NAME(SType, STypeVec);
+CVECTOR_WITH_NAME(STaggedValue,  STaggedValueVec);
+CVECTOR_WITH_NAME(SFunc, SFuncVec);
 CVECTOR(U8);
 
 #endif /* INTERNAL_H */
