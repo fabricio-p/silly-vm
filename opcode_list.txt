@@ -63,3 +63,48 @@ rem.f64
 floor.f64
 ceil.f64
 sqrt.f64
+# Relational operators
+#   32 bit integers
+eq.i32
+neq.i32
+eqz.i32
+#     unsigned
+gt.u32
+lt.u32
+ge.u32
+le.u32
+#     signed
+gt.s32
+lt.s32
+ge.s32
+le.s32
+#   64 bit integers
+eq.i64
+neq.i64
+eqz.i64
+#     unsigned
+gt.u64
+lt.u64
+ge.u64
+le.u64
+#     signed
+gt.s64
+lt.s64
+ge.s64
+le.s64
+#   32 bit floats
+eq.f32
+neq.f32
+eqz.f32
+gt.f32
+lt.f32
+ge.f32
+le.f32
+#   64 bit floats
+eq.f64
+neq.f64
+eqz.f64
+gt.f64
+lt.f64
+ge.f64
+le.f64

@@ -7,11 +7,11 @@ mline_comment = None
 sline_comment = None
 for_vm = True
 if len(argv) > 1 and argv[1].lower() in ("py", "python"):
-    template = "%s%s = %i"
+    template = "%s%s = 0x%02x"
     mline_comment = sline_comment = lambda s: f"# {s}"
     for_vm = False
 else:
-    template = "#define SILLY_INSTR_%s%s %i"
+    template = "#define SILLY_INSTR_%s%s 0x%02x"
     mline_comment = lambda s: f"/* {s} */"
     sline_comment = lambda s: f"// {s}"
 
