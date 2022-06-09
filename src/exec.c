@@ -40,7 +40,7 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame)
   SStatus status = SILLY_E_OK;
   U8 const *ip = frame->function->code;
   U8 const *const end = frame->function->code_end;
-  STaggedValue cache = { .kind = 0, .v.u64 = 0 };
+  STaggedValue cache = {0};
   STaggedValue *sl = frame->sl;
   // STaggedValue *sb = frame->sb;
   STaggedValue *st = frame->st;

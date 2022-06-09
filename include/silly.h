@@ -5,17 +5,17 @@
 #include <c-arena-alloc/lib.h>
 
 // Typedefs of basic primitive types and structs
-typedef uint8_t            U8;
-typedef int8_t             S8;
-typedef uint16_t           U16;
-typedef int16_t            S16;
-typedef unsigned long      U32;
-typedef signed   long      S32;
-typedef unsigned long long U64;
-typedef signed   long long S64;
-typedef          int       Int;
-typedef unsigned int       Uint;
-typedef signed   int       Sint;
+typedef uint8_t      U8;
+typedef int8_t       S8;
+typedef uint16_t     U16;
+typedef int16_t      S16;
+typedef uint32_t     U32;
+typedef int32_t      S32;
+typedef uint64_t     U64;
+typedef int64_t      S64;
+typedef          int Int;
+typedef unsigned int Uint;
+typedef signed   int Sint;
 
 typedef float      F32;
 typedef double     F64;
@@ -40,6 +40,7 @@ typedef enum {
   E(OOM),
   E(SO),
   E(CDE),
+  E(CAOOB),
   E(CRASH),
   E(INCORRECT_SECTION_SIZE),
   E(INVALID_TYPE_SIZE),
@@ -48,7 +49,9 @@ typedef enum {
   E(INVALID_TYPE_INDEX),
   E(EXHAUSTED_STACK),
   E(INVALID_OPERAND_KIND),
-  E(OOB_LOCAL_ACCESS)
+  E(OOB_LOCAL_ACCESS),
+  E(INVALID_RESULTS),
+  E(INVALID_RESULT_TYPES)
 } SStatus;
 #undef E
 #else
@@ -57,16 +60,19 @@ typedef enum {
 #define SILLY_E_OOM   2 // (O)ut (O)f (M)emory
 #define SILLY_E_SO    3 // (S)tack (O)verflow
 #define SILLY_E_CDE   4 // (C)all (D)epth (E)xceeded
-#define SILLY_E_CRASH 5
+#define SILLY_E_CAOOB 5 // (C)onstant (A)ccees (O)ut (O)f (B)ounds
+#define SILLY_E_CRASH 6
 // Errors that occur only during bytecode parsing
-#define SILLY_E_INCORRECT_SECTION_SIZE   6
-#define SILLY_E_INVALID_TYPE_SIZE        7
-#define SILLY_E_INCORRECT_TYPE_COUNT     8
-#define SILLY_E_INCORRECT_FUNCTION_COUNT 9
-#define SILLY_E_INVALID_TYPE_INDEX       10
-#define SILLY_E_EXHAUSTED_STACK          11
-#define SILLY_E_INVALID_OPERAND_KIND     12
-#define SILLY_E_OOB_LOCAL_ACCESS         13
+#define SILLY_E_INCORRECT_SECTION_SIZE   7
+#define SILLY_E_INVALID_TYPE_SIZE        8
+#define SILLY_E_INCORRECT_TYPE_COUNT     9
+#define SILLY_E_INCORRECT_FUNCTION_COUNT 10
+#define SILLY_E_INVALID_TYPE_INDEX       11
+#define SILLY_E_EXHAUSTED_STACK          12
+#define SILLY_E_INVALID_OPERAND_KIND     13
+#define SILLY_E_OOB_LOCAL_ACCESS         14
+#define SILLY_E_INVALID_RESULTS          15
+#define SILLY_E_INVALID_RESULT_TYPES     15
 
 typedef Ssize      SStatus;
 #endif
@@ -92,7 +98,7 @@ typedef struct SFunc {
   void        (*native)(SCallFrame *);
   struct {
     Uint code_offset; // from the start of the code section
-    Uint code_end;
+    Uint code_size;
     Uint type_idx;
     Uint offset; // from the start of the function section
   }           raw;
@@ -164,6 +170,21 @@ typedef struct SSecInfo {
   Uint item_count;
 } SSecInfo;
 
+#define CPOOL_INFO(t, n)                      \
+  typedef struct S##n##CPoolInfo {            \
+    t *data;                                  \
+    Uint size;                                \
+  }__attribute__((packed)) S##n##CPoolInfo;
+
+CPOOL_INFO(void, Generic);
+
+CPOOL_INFO(U32, I32);
+CPOOL_INFO(U64, I64);
+CPOOL_INFO(F32, F32);
+CPOOL_INFO(F64, F64);
+
+#undef CPOOL_INFO
+
 typedef struct SModule {
   CStr  path;
   struct {
@@ -174,14 +195,24 @@ typedef struct SModule {
         SSecInfo func;
         SSecInfo data;
         SSecInfo code;
+        SSecInfo pool;
       }        seci;
-      SSecInfo seci_arr[4];
+      SSecInfo seci_arr[5];
     };
     struct {
       U16 min;
       U16 max;
     }   mem_cfg;
   }     raw;
+  union {
+    struct {
+      SI32CPoolInfo i32;
+      SI64CPoolInfo i64;
+      SF32CPoolInfo f32;
+      SF64CPoolInfo f64;
+    }                 cpools;
+    SGenericCPoolInfo cpool_arr[4];
+  };
   SType *types;
   SFunc *functions;
   Bool  initted;
