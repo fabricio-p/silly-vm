@@ -1,5 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
+#include <inttypes.h>
 #include <c-ansi-sequences/graphics.h>
 #include "silly.h"
 
@@ -16,18 +17,16 @@ static void print_value(STaggedValue *val)
   SET_TYPE_FG();
   switch (val->kind)
   {
-#define print_case(type, fmt, field)        \
-  case TYPE(type):                          \
-    printf(fmt, val->field); break
+#define print_case(type, fmt, ...)      \
+  case TYPE(type):                      \
+    printf("%" fmt, __VA_ARGS__); break
 
-    print_case(U32, "%lu",    u32);
-    print_case(S32, "%li",    s32);
-    print_case(U64, "%llu",   u64);
-    print_case(S64, "%lli",   s64);
-    print_case(F32, "%.6f",   f32);
-    print_case(F64, "%.12lF", f64);
+    print_case(I32, PRIi32 " | %" PRIu32, val->v.s32, val->v.u32);
+    print_case(I64, PRIi64 " | %" PRIu64, val->v.s64, val->v.u64);
+    print_case(F32, ".6f",                val->v.f32);
+    print_case(F64, ".12lF",              val->v.f64);
   default:
-    printf("unknown type");
+    printf("<\?\?>");
 #undef print_case
   }
   RESET_TYPE_FG();
@@ -58,9 +57,9 @@ static void print_call_frame(SCallFrame *frame)
   printf("========================================");
   for (Usize i = 0; i < frame->function->name.len; ++i)
   {
-    putc('=', stdout);
+    putchar('=');
   }
-  putc('\n', stdout);
+  putchar('\n');
 }
 #else
 #define print_call_frame(frame)

@@ -108,8 +108,8 @@ F64 READ_F64(void const *const ptr)
 #define STORE_F64(ptr, val) WRITE_F64(ptr, val)
 #define LOAD_U8(ptr) (*(U8 *)(ptr))
 #define LOAD_S8(ptr) (*(S8 *)(ptr))
-#define LOAD_F32(ptr, val) READ_F32(ptr, val)
-#define LOAD_F64(ptr, val) READ_F64(ptr, val)
+#define LOAD_F32(ptr) READ_F32(ptr)
+#define LOAD_F64(ptr) READ_F64(ptr)
 
 #if SILLY_LITTLE_ENDIAN != 0
 #define STORE_U16(ptr, val) WRITE_U16(ptr, val)

@@ -1,52 +1,37 @@
-# The instruction set of the bytecode
 nop
 halt.vm
 # Stack manipulation
 duplicate.any
 drop.any
 # Constants
-const.u32
-const.s32
-const.u64
-const.s64
+const.i32
+const.i64
 const.f32
 const.f64
 # Virtual registers
 set.local
 get.local
-# Operations on 32 bit unsigned integers
-add.u32
-sub.u32
-mul.u32
+# Mathematical operations for 32 bit integers
+add.i32
+sub.i32
+mul.i32
 div.u32
 rem.u32
-lshift.u32
-rshift.u32
-# Operations on 32 bit signed integers
-add.s32
-sub.s32
-mul.s32
 div.s32
 rem.s32
-lshift.s32
-rshift.s32
-# Operations on 64 bit unsigned integers
-add.u64
-sub.u64
-mul.u64
+lshift.i32
+rshift.i32
+# Mathematical operations for 64 bit integers
+add.i64
+sub.i64
+mul.i64
 div.u64
 rem.u64
-lshift.u64
-rshift.u64
-# Operations on 64 bit signed integers
-add.s64
-sub.s64
-mul.s64
 div.s64
 rem.s64
-lshift.s64
-rshift.s64
-# Operations on 32 bit floating points
+lshift.i64
+rshift.i64
+# Mathematical operations for 32 bit floating points
 add.f32
 sub.f32
 mul.f32
@@ -54,7 +39,8 @@ div.f32
 rem.f32
 floor.f32
 ceil.f32
-# Operations on 64 bit floating points
+sqrt.f32
+# Mathematical operations for 64 bit floating points
 add.f64
 sub.f64
 mul.f64

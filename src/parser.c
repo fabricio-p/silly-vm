@@ -3,6 +3,7 @@
 #include "code.h"
 #include "macros.h"
 #include "code.h"
+#include "util.h"
 #define throw(err) { status = SILLY_E_##err; goto catch; }
 #define throw_if(cond, err) if (cond) { throw(err); }
 #define try(s) if ((status = (s)) != SILLY_E_OK) { goto catch; }
@@ -10,6 +11,57 @@
 #define SECTION_PARSER(nm)                                            \
   SStatus parse_##nm##_section(SEnv *env, SModule *mod,               \
                                U8 const *const ptr, SSecInfo const info)
+
+/**
+ */
+SECTION_PARSER(cpool)
+{
+  SStatus status = SILLY_E_OK;
+  U32 const *pool_bin = (U32 const *)ptr;
+  mod->cpools.i64.size = LOAD_U32(pool_bin++);
+  mod->cpools.f64.size = LOAD_U32(pool_bin++);
+  mod->cpools.i32.size = LOAD_U32(pool_bin++);
+  mod->cpools.f32.size = LOAD_U32(pool_bin++);
+
+  mod->cpools.i64.data = (U64 *)pool_bin;
+  mod->cpools.f64.data = (F64 *)(mod->cpools.i64.data +
+                                 mod->cpools.i64.size);
+  mod->cpools.i32.data = (U32 *)(mod->cpools.f64.data +
+                                 mod->cpools.f64.size);
+  mod->cpools.f32.data = (F32 *)mod->cpools.i32.data +
+                                mod->cpools.i32.size;
+  // We convert the values from little to big endian
+#if SILLY_LITTLE_ENDIAN == 0
+  for (U8 *p = mod->cpools.i64.data;
+       (void *)p < mod->cpools.i32.data; p += sizeof(U64))
+  {
+    U8 tmp = p[7];
+    p[7]   = p[0];
+    p[0]   = tmp;
+    tmp    = p[6];
+    p[6]   = p[1];
+    p[1]   = tmp;
+    tmp    = p[5];
+    p[5]   = p[2];
+    p[2]   = tmp;
+    tmp    = p[4];
+    p[4]   = p[3];
+    p[3]   = tmp;
+  }
+  for (U8 *p = mod->cpools.i32.data,
+       end = (mod->cpools.f32.data + mod->cpools.f32.size);
+       p < end; p += sizeof(U32))
+  {
+    U8 tmp = p[3];
+    p[3]   = p[0];
+    p[0]   = tmp;
+    tmp    = p[2];
+    p[2]   = p[1];
+    p[1]   = tmp;
+  }
+#endif /* SILLY_LITTLE_ENDIAN == 0 */
+  return status;
+}
 
 /**
  * @fn SStatus parse_type_section(SEnv *env, SModule *mod,
@@ -119,38 +171,6 @@ catch:
 CVECTOR_WITH_NAME(STaggedValueKind, PseudoStack);
 
 /**
- * @fn SGenericCPoolInfo *get_cpool_by_opcode(SModule *mod, Uint opc)
- * @param  mod The pointer to the module that we're working with
- * @param  opc A SILLY_INSTR_CONST_* (const.*) opcode
- * @return The constant opcode's type correspnding constant pool
- */
-__inline__
-SGenericCPoolInfo *get_cpool_by_opcode(SModule *mod, Uint opc)
-{
-  /*
-   * What the code below does
-   *
-   * mod->cpool_arr[0b000]: i32 (U32|S32)
-   * mod->cpool_arr[0b001]: i64 (U64|S64)
-   * mod->cpool_arr[0b010]: f32
-   * mod->cpool_arr[0b011]: f64
-   *****************************************************************
-   * x = const.u32 - const.u32 = 0b000; x >> 1 = 0b000
-   * x = const.s32 - const.u32 = 0b001; x >> 1 = 0b000
-   * x = const.u64 - const.u32 = 0b010; x >> 1 = 0b001
-   * x = const.s64 - const.u32 = 0b011; x >> 1 = 0b001
-   * x = const.f32 - const.u32 = 0b100; x >> 1 = 0b010
-   * x = const.f64 - const.u32 = 0b101; x >> 1 = 0b010 (wrong index,
-   *                                                    have to check for
-   *                                                    this case and set
-   *                                                    `idx` manually)
-   */
-  Int idx = opc == SILLY_INSTR_CONST_F64 ?
-            3 : ((opc - SILLY_INSTR_CONST_U32) >> 1);
-  return (SGenericCPoolInfo *)(&(mod->cpool_arr[idx]));
-}
-
-/**
  * @brief  Validates the bytecode body of a function.
  * @param  func The function that'll be validated
  * @param  mod  The module to which the function belongs to
@@ -187,12 +207,13 @@ static SStatus validate_function(SFunc *func, SModule *mod,
         CHECK_SIZE();
         break;
       }
-      OP_RANGE(CONST_U32, CONST_F64)
+      OP_RANGE(CONST_I32, CONST_F64)
       {
-        PseudoStack_push(&stack, (opc - SILLY_INSTR_CONST_U32 + 1) << 2);
+        Uint pooli = opc - SILLY_INSTR_CONST_I32;
+        PseudoStack_push(&stack, (pooli + 1) << 2);
         CHECK_SIZE();
         Uint index = LOAD_U32(ip);
-        throw_if(index >= get_cpool_by_opcode(mod, opc)->size, CAOOB);
+        throw_if(index >= mod->cpool_arr[pooli].size, CAOOB);
         ip += 4;
         break;
       }
@@ -207,24 +228,14 @@ static SStatus validate_function(SFunc *func, SModule *mod,
         ip += 4;
         break;
       }
-      OP_RANGE(ADD_U32, RSHIFT_U32)
+      OP_RANGE(ADD_I32, RSHIFT_I32)
       {
-        opd_kind = SILLY_TYPE_U32;
+        opd_kind = SILLY_TYPE_I32;
         goto binop_operand_check;
       }
-      OP_RANGE(ADD_S32, RSHIFT_S32)
+      OP_RANGE(ADD_I64, RSHIFT_I64)
       {
-        opd_kind = SILLY_TYPE_S32;
-        goto binop_operand_check;
-      }
-      OP_RANGE(ADD_U64, RSHIFT_U64)
-      {
-        opd_kind = SILLY_TYPE_U64;
-        goto binop_operand_check;
-      }
-      OP_RANGE(ADD_S64, RSHIFT_S64)
-      {
-        opd_kind = SILLY_TYPE_S64;
+        opd_kind = SILLY_TYPE_I64;
         goto binop_operand_check;
       }
       OP_RANGE(ADD_F32, REM_F32)
@@ -232,7 +243,7 @@ static SStatus validate_function(SFunc *func, SModule *mod,
         opd_kind = SILLY_TYPE_F32;
         goto binop_operand_check;
       }
-      OP(FLOOR_F32) OP(CEIL_F32)
+      OP_RANGE(FLOOR_F32, SQRT_F32)
       {
         opd_kind = SILLY_TYPE_F32;
         goto unop_operand_check;

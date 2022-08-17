@@ -16,7 +16,7 @@
  * U32 LE data_count
  * U32 LE code_section_size
  * U32 LE cpool_size
- * U8 {section:    cpool}[cpool_size]
+ * U8 {section:    cpool}[cpool_size * sizeof(U32)]
  * U8 {section:     type}[type_section_size]
  * U8 {section: function}[func_section_size]
  * U8 {section:     data}[data_section_size]
@@ -28,9 +28,9 @@
  * U32 LE i32_count
  * U32 LE f32_count
  * U64 LE i64[i64_count]
- * F64    f64[f64_count]
+ * F64 LE f64[f64_count]
  * U32 LE i32[i32_count]
- * F32    f32[f32_count]
+ * F32 LE f32[f32_count]
  *
  * ## {section: type} format
  * <type>[]
@@ -60,6 +60,7 @@ SStatus parse_module(SEnv *, SModule *);
 #define SECTION_PARSER(n)                                         \
   SStatus parse_##n##_section(SEnv *, SModule *, U8 const *const, \
                               SSecInfo const)
+SECTION_PARSER(cpool);
 SECTION_PARSER(type);
 SECTION_PARSER(data);
 SECTION_PARSER(function);

@@ -42,6 +42,7 @@ typedef enum {
   E(CDE),
   E(CAOOB),
   E(CRASH),
+  E(INVOPC),
   E(INCORRECT_SECTION_SIZE),
   E(INVALID_TYPE_SIZE),
   E(INCORRECT_TYPE_COUNT),
@@ -55,24 +56,25 @@ typedef enum {
 } SStatus;
 #undef E
 #else
-#define SILLY_E_OK    0
-#define SILLY_E_HALT  1
-#define SILLY_E_OOM   2 // (O)ut (O)f (M)emory
-#define SILLY_E_SO    3 // (S)tack (O)verflow
-#define SILLY_E_CDE   4 // (C)all (D)epth (E)xceeded
-#define SILLY_E_CAOOB 5 // (C)onstant (A)ccees (O)ut (O)f (B)ounds
-#define SILLY_E_CRASH 6
+#define SILLY_E_OK      0
+#define SILLY_E_HALT    1
+#define SILLY_E_OOM     2 // (O)ut (O)f (M)emory
+#define SILLY_E_SO      3 // (S)tack (O)verflow
+#define SILLY_E_CDE     4 // (C)all (D)epth (E)xceeded
+#define SILLY_E_CAOOB   5 // (C)onstant (A)ccees (O)ut (O)f (B)ounds
+#define SILLY_E_CRASH   6
+#define SILLY_E_INVOPC  7 // (Inv)alid (Opc)ode
 // Errors that occur only during bytecode parsing
-#define SILLY_E_INCORRECT_SECTION_SIZE   7
-#define SILLY_E_INVALID_TYPE_SIZE        8
-#define SILLY_E_INCORRECT_TYPE_COUNT     9
-#define SILLY_E_INCORRECT_FUNCTION_COUNT 10
-#define SILLY_E_INVALID_TYPE_INDEX       11
-#define SILLY_E_EXHAUSTED_STACK          12
-#define SILLY_E_INVALID_OPERAND_KIND     13
-#define SILLY_E_OOB_LOCAL_ACCESS         14
-#define SILLY_E_INVALID_RESULTS          15
-#define SILLY_E_INVALID_RESULT_TYPES     15
+#define SILLY_E_INCORRECT_SECTION_SIZE   8
+#define SILLY_E_INVALID_TYPE_SIZE        9
+#define SILLY_E_INCORRECT_TYPE_COUNT     10
+#define SILLY_E_INCORRECT_FUNCTION_COUNT 11
+#define SILLY_E_INVALID_TYPE_INDEX       12
+#define SILLY_E_EXHAUSTED_STACK          13
+#define SILLY_E_INVALID_OPERAND_KIND     14
+#define SILLY_E_OOB_LOCAL_ACCESS         15
+#define SILLY_E_INVALID_RESULTS          16
+#define SILLY_E_INVALID_RESULT_TYPES     17
 
 typedef Ssize      SStatus;
 #endif
@@ -113,8 +115,6 @@ typedef struct SFunc {
   }           locals;
 } SFunc;
 typedef ARENA_PTR_T(silly_func_ptr_t, SFunc) SFuncPtr;
-
-// #include "functable.h"
 
 typedef union SValue {
   U32 u32;
@@ -171,12 +171,12 @@ typedef struct SSecInfo {
 } SSecInfo;
 
 #define CPOOL_INFO(t, n)                      \
-  typedef struct S##n##CPoolInfo {            \
+  typedef struct S##n##CPool {                \
     t *data;                                  \
     Uint size;                                \
-  }__attribute__((packed)) S##n##CPoolInfo;
+  }__attribute__((packed)) S##n##CPool;
 
-CPOOL_INFO(void, Generic);
+CPOOL_INFO(void,);
 
 CPOOL_INFO(U32, I32);
 CPOOL_INFO(U64, I64);
@@ -206,12 +206,12 @@ typedef struct SModule {
   }     raw;
   union {
     struct {
-      SI32CPoolInfo i32;
-      SI64CPoolInfo i64;
-      SF32CPoolInfo f32;
-      SF64CPoolInfo f64;
-    }                 cpools;
-    SGenericCPoolInfo cpool_arr[4];
+      SI32CPool i32;
+      SI64CPool i64;
+      SF32CPool f32;
+      SF64CPool f64;
+    }       cpools;
+    SCPool cpool_arr[4];
   };
   SType *types;
   SFunc *functions;
