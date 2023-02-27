@@ -2,7 +2,7 @@
 #define SILLY_H
 #include <stdlib.h>
 #include <stdint.h>
-#include <c-arena-alloc/lib.h>
+// #include <c-arena-alloc/lib.h>
 
 // Typedefs of basic primitive types and structs
 typedef uint8_t      U8;
@@ -114,7 +114,7 @@ typedef struct SFunc {
     U16       count;
   }           locals;
 } SFunc;
-typedef ARENA_PTR_T(silly_func_ptr_t, SFunc) SFuncPtr;
+// typedef ARENA_PTR_T(silly_func_ptr_t, SFunc) SFuncPtr;
 
 typedef union SValue {
   U32 u32;
@@ -217,14 +217,14 @@ typedef struct SModule {
   SFunc *functions;
   Bool  initted;
 } SModule;
-typedef ARENA_PTR_T(silly_module_ptr_t, SModule) SModulePtr;
+// typedef ARENA_PTR_T(silly_module_ptr_t, SModule) SModulePtr;
 
 typedef struct AllocNode AllocNode;
 
 struct SEnv {
   SStack     stack;
   SMemory    memory;
-  ArenaAlloc mod_pool;
+  // ArenaAlloc mod_pool;
   SModule    *main_mod;
 };
 

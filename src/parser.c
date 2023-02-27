@@ -90,7 +90,7 @@ SECTION_PARSER(type)
     type->param_count  = param_count;
     type->result_count = result_count;
     type->types = type_ptr;
-    
+
     type_ptr += types_count;
     // TODO: Create some more detailed error reporting system
     throw_if(type_ptr > end, INVALID_TYPE_SIZE);
@@ -219,7 +219,7 @@ static SStatus validate_function(SFunc *func, SModule *mod,
       }
       OP(SET_LOCAL) OP(GET_LOCAL)
       {
-        PseudoStack_pop(&stack);
+        PseudoStack_pop(stack);
         Uint i = LOAD_U32(ip);
         throw_if(i >= func->type->param_count + func->locals.count,
                  OOB_LOCAL_ACCESS
@@ -257,7 +257,7 @@ binop_operand_check:
         STaggedValueKind opd2_kind = stack[PseudoStack_len(stack) - 1];
         throw_if(opd1_kind != opd_kind, INVALID_OPERAND_KIND);
         throw_if(opd2_kind != opd_kind, INVALID_OPERAND_KIND);
-        PseudoStack_pop(&stack);
+        PseudoStack_pop(stack);
         break;
       }
       OP_RANGE(FLOOR_F64, SQRT_F64)
