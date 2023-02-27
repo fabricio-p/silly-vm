@@ -8,8 +8,8 @@
 static void print_value(STaggedValue *val)
 {
 #ifdef OUTCOLORS
-#define SET_TYPE_FG() printf(ANSISEQ_SETFG256(190))
-#define RESET_TYPE_FG() printf(ANSISEQ_GR_RESET)
+#define SET_TYPE_FG() printf(ANSIQ_SETFG256(190))
+#define RESET_TYPE_FG() printf(ANSIQ_GR_RESET)
 #else
 #define SET_TYPE_FG()
 #define RESET_TYPE_FG()
@@ -36,8 +36,8 @@ static void print_value(STaggedValue *val)
 static void print_call_frame(SCallFrame *frame)
 {
 #ifdef OUTCOLORS
-#define NAME_FG ANSISEQ_SETFG_CYAN
-#define GR_RESET ANSISEQ_GR_RESET
+#define NAME_FG ANSIQ_SETFG_CYAN
+#define GR_RESET ANSIQ_GR_RESET
 #else
 #define NAME_FG
 #define GR_RESET
@@ -49,8 +49,12 @@ static void print_call_frame(SCallFrame *frame)
   for (STaggedValue *val = frame->st - 1,
                     *beg = frame->sb; val >= beg; --val)
   {
-    printf("-%*s[%d] %s: ", (int)frame->function->name.len + 3, "",
-           val - beg, type_name(val->kind));
+    printf(
+        "-%*s[%d] %s: ",
+        (int)frame->function->name.len + 3,
+        "",
+        (int)(val - beg), type_name(val->kind)
+    );
     print_value(val);
     puts("");
   }

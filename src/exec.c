@@ -11,13 +11,13 @@ typedef U32 I32;
 typedef U64 I64;
 
 #define push(val, type, field)        \
-  {                                   \
+  do {                                \
     st->v.field = (val);              \
     st->kind = (type);                \
     ++st;                             \
     cache_##field = (val);            \
     cache_kind = (type);              \
-  }           
+  } while(0)
 
 #define HANDLE_BINOP_INSTR(type, field, op, opname)   \
   HANDLE_INSTR(opname##_##type)                       \
@@ -58,12 +58,14 @@ SStatus SFunc_exec(SEnv *env, SCallFrame *frame, SCPool pools[4])
   {
 #ifdef ENV_DEV
 #ifdef OUTCOLORS
-#define IP_FMT(s) ANSISEQ_SETFG256(154) s ANSISEQ_GR_RESET
+#define IP_FMT(s) ANSIQ_SETFG256(154) s ANSIQ_GR_RESET
 #else
 #define IP_FMT(s) s
 #endif /* OUTCOLORS */
-    printf("[ip: "IP_FMT("0x%08x")"] ",
-           ip - frame->function->code);
+    printf(
+        "[ip: " IP_FMT("0x%08x") "] ",
+        (unsigned int)(ip - frame->function->code)
+    );
 #endif
     print_instruction(*ip);
     U8 instruction = *(ip++);

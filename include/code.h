@@ -1,5 +1,6 @@
 #ifndef CODE_H
 #define CODE_H
+#include <stdio.h>
 #include <c-ansi-sequences/graphics.h>
 #include "silly.h"
 #include "macros.h"
@@ -350,11 +351,11 @@ CStr type_name(U8 type)
 static void print_instruction(U8 instr)
 {
 #ifdef OUTCOLORS
-#define OP_FMT(s) ANSISEQ_SETFG_MAGENTA s ANSISEQ_GR_RESET
-#define TYPE_FMT(s) ANSISEQ_SETFG256(216) s ANSISEQ_GR_RESET
+#define OP_FMT(s) ANSIQ_SETFG_MAGENTA s ANSIQ_GR_RESET
+#define TYPE_FMT(s) ANSIQ_SETFG256(216) s ANSIQ_GR_RESET
 #define OPN_FMT(s)                                       \
-  ANSISEQ_GR_SEQ(ANSISEQ_FG256(234) ANSISEQ_BG256(115))   \
-  s ANSISEQ_GR_RESET
+  ANSIQ_GR_SEQ(ANSIQ_FG256(234) ANSIQ_BG256(115))   \
+  s ANSIQ_GR_RESET
 #else
 #define OP_FMT(s) s
 #define TYPE_FMT(s) s
@@ -362,8 +363,10 @@ static void print_instruction(U8 instr)
 #endif /* OUTCOLORS */
   if (instr >= COUNT_SILLY_INSTR)
   {
-    LOG_ERROR("Unrecognized instruction, opcode: "OP_FMT("0x%x")"\n",
-              instr);
+    LOG_ERROR(
+        "Unrecognized instruction, opcode: " OP_FMT("0x%x") "\n",
+        instr
+    );
   } else
   {
     InstrInfo const *const info = &instr_info[instr];
@@ -406,7 +409,7 @@ static void print_instruction(U8 instr)
       printf(TYPE_FMT("%s"), type_name(info->immediate_arg_types[0]));
       for (Ssize i = 1; i < info->immediate_arg_count; ++i)
       {
-        printf(", "TYPE_FMT("%s"),
+        printf(", " TYPE_FMT("%s"),
                type_name(info->immediate_arg_types[i]));
       }
     } */
